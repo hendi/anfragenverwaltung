@@ -1,0 +1,12 @@
+.ConversationSaver i {
+	color:black;
+	display: block-inline;
+	font-size:18px;
+	margin-left:10px;
+	cursor: pointer;
+}
+
+.ConversationSaver i:hover {
+	font-weight:bold;
+	color:darkblue;
+}
