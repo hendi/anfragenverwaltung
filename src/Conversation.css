@@ -1,0 +1,116 @@
+.Conversation {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.Conversation .header {}
+
+.Conversation .main {}
+
+.Conversation .header>h2 {
+	margin-top: 0px;
+	color: #333;
+}
+
+.Conversation .header {
+	padding: 8px;
+	margin-bottom: 14px;
+}
+
+.Conversation .header>span {
+	margin-right: 10px;
+}
+
+.Conversation.rating-green {
+	background-image: linear-gradient(to bottom, #21B24B -40px, #f6f6f6 44px);
+}
+
+.Conversation.rating-yellow {
+	background-image: linear-gradient(to bottom, #FEF200 -40px, #f6f6f6 44px);
+}
+
+.Conversation.rating-red {
+	background-image: linear-gradient(to bottom, #ED1B24 -40px, #f6f6f6 44px);
+}
+
+.Conversation.is_in_trash {
+	background-image: linear-gradient(to bottom, #DDDDDD -40px, #f6f6f6 44px);
+	color: #888888;
+}
+
+.Conversation.is_in_trash .MessageItem {
+	background-image: linear-gradient(to bottom, #DDDDDD 0%, #f6f6f6 75%);
+	color: #888888;
+}
+
+.Conversation .ConversationPrinter,
+.Conversation .ConversationTrasher,
+.Conversation .ConversationReadStatus {
+	float: left;
+	margin-right: 10px;
+	margin-top: -5px;
+}
+
+.Conversation .ConversationRater {
+	float: right;
+}
+
+.Conversation.is_in_trash .ConversationTrasher {
+	color: #ff0000 !important;
+}
+
+.Conversation .notes i {
+	margin-right: 4px;
+}
+
+.Conversation .notes textarea {
+	width: 100%;
+	height: 100px;
+}
+
+.Conversation .notes button {
+	margin-top: 4px;
+}
+
+.Conversation .btn {
+	border-radius: 0px;
+	background-image: none;
+	background-color: #f7f7f7;
+	border: 1px solid #ccc;
+	text-decoration: none;
+	text-shadow: none;
+	color: #000;
+	box-shadow: none;
+
+}
+
+.Conversation .btn i {
+	margin-right: 4px;
+}
+
+.Conversation .btn:hover {
+	background-color: #C8E0F3;
+}
+
+.Conversation .btn-primary {
+	background-color: #017FDD;
+	color: #fff;
+	border: 1px solid #0193FF;
+}
+
+.Conversation .btn-primary:hover {
+	background-color: #429BDD;
+
+}
+
+.Conversation .btn[disabled] {
+	color: #000;
+	background-color: #f7f7f7;
+	opacity: .65;
+	border: 1px solid #ccc;
+}
+
+.Conversation .btn[disabled]:hover {
+	background-color: #f7f7f7;
+}

@@ -1,0 +1,131 @@
+.ConversationListItem {
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+
+	background: #fff;
+	padding: 7px 20px;
+	border-bottom: 1px solid #ccc;
+	height: 64px;
+	overflow: hidden;
+
+	user-select: none;
+}
+
+.ConversationListItem .info {
+	float: right;
+	width: 80px;
+	text-align: right;
+}
+
+.ConversationListItem .pointer {
+	cursor: pointer;
+}
+
+.ConversationListItem .name {
+	font-weight: 700;
+	font-size: 16px;
+}
+
+.ConversationListItem.unread .name {
+	font-weight: 700;
+}
+
+.ConversationListItem .date {
+	margin-top: 4px;
+	font-size: 12px;
+	display: inline-block;
+}
+
+.ConversationListItem hr {
+	border: 0;
+	height: 1px;
+	margin: 2px 0 10px 0;
+	background: #333;
+	background-image: linear-gradient(to right, #ccc, #333, #ccc);
+}
+
+.ConversationListItem p {
+	white-space: pre-line;
+}
+
+
+.ConversationListItem.rating-green {
+	background-color: rgba(33, 178, 75, .15);
+}
+
+.ConversationListItem.rating-yellow {
+	background-color: rgba(254, 242, 0, .15);
+}
+
+.ConversationListItem.rating-red {
+	background-color: rgba(237, 27, 36, .15);
+}
+
+
+.ConversationListItem.is_in_trash {
+	background-color: rgba(221, 221, 221, .15);
+	color: #888888;
+}
+
+.ConversationListItem i.icon-reply {
+	color: #236EA2;
+	margin-right: 4px;
+}
+
+.ConversationListItem i.icon-paperclip {
+	color: #000000;
+	margin-right: 4px;
+}
+
+.ConversationListItem i.icon-comment-alt {
+	color: #000000;
+	margin-right: 4px;
+}
+
+/*
+.ConversationListItem i.icon-asterisk {
+	color:orange;
+	font-size:11px;
+	margin-right: 2px;
+}
+*/
+
+.ConversationListItem.is_in_trash a {
+	color: #888888 !important;
+}
+
+.ConversationListItem .btn {
+	margin-left: 4px;
+}
+
+.ConversationListItem .ConversationTrasher {
+	float: left;
+	margin-right: 20px;
+}
+
+.ConversationListItem .ConversationSaver {
+	float: left;
+	margin-right: 20px;
+}
+
+.ConversationListItem .ConversationRater {
+	float: right;
+}
+
+.ConversationListItem.unread {
+	border-left: 3px solid orange;
+	padding-left: 17px;
+}
+
+.ConversationListItem.selected {
+	border-left: 3px solid #236EA2;
+	padding-left: 17px;
+}
+
+.ConversationListItem input[type="checkbox"] {
+	margin: 0 4px 0 0;
+}
+
+.ConversationListItem.active {
+	background-color: #C8E0F3;
+}

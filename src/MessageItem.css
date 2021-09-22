@@ -1,0 +1,36 @@
+.MessageItem {
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+
+	background:#fff;
+	padding:8px;
+	border-radius:4px;
+	border:1px solid #ccc;
+	margin-bottom:15px;
+	/*box-shadow: 5px 5px 5px 0px rgba(0,0,0,0.5);*/
+}
+
+.MessageItem hr {
+    border: 0;
+    height: 1px;
+	margin:2px 0 10px 0;
+    background: #333;
+    background-image: linear-gradient(to right, #ccc, #333, #ccc);
+}
+
+.MessageItem p {
+	white-space: pre-line;
+}
+
+.MessageItem.is_incoming {
+	margin-right:20%;
+}
+
+.MessageItem.is_reply {
+	margin-left:20%;
+}
+
+.MessageItem i.icon-reply {
+	color:#236EA2;
+	margin-right:4px;
+}

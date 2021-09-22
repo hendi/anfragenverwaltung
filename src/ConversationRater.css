@@ -1,0 +1,28 @@
+.ConversationRater i {
+	display: block-inline;
+	font-size: 18px;
+	margin-left: 5px;
+	cursor: pointer;
+}
+
+.ConversationRater i:hover {
+	font-weight: bold;
+}
+
+.ConversationRater .active {
+	font-weight: bold;
+}
+
+/*
+.ConversationRater .icon-thumbs-up-alt.active {
+	color: rgb(33, 178, 75)
+}
+
+.ConversationRater .icon-unchecked.active {
+	color: rgb(255, 209, 89);
+}
+
+.ConversationRater .icon-thumbs-down-alt.active {
+	color: rgb(227, 27, 36);
+}
+*/
