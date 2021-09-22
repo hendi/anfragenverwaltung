@@ -1,4 +1,4 @@
-%raw(`require('./ConversationPrinter.css')`)
+%%raw(`import './ConversationPrinter.css'`)
 
 @scope("window") @val external print: unit => unit = "print"
 

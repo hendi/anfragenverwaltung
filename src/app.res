@@ -1,4 +1,4 @@
-%raw(`require('./app.css')`)
+%%raw(`import './app.css'`)
 
 @@warning("-3")
 

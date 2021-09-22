@@ -1,4 +1,4 @@
-%raw(`require('./index.css')`)
+%%raw(`import './index.css'`)
 
 /*
  [@bs.module "./registerServiceWorker"]

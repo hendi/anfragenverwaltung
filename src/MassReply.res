@@ -1,4 +1,4 @@
-%raw(`require('./MassReply.css')`)
+%%raw(`import './MassReply.css'`)
 
 open Utils
 

@@ -1,4 +1,4 @@
-%raw(`require('./FolderNavigationItem.css')`)
+%%raw(`import './FolderNavigationItem.css'`)
 
 open Utils
 

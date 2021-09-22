@@ -1,4 +1,4 @@
-%raw(`require('./MessageItem.css')`)
+%%raw(`import './MessageItem.css'`)
 
 open Utils
 

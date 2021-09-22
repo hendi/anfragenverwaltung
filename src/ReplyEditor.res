@@ -1,4 +1,4 @@
-%raw(`require('./ReplyEditor.css')`)
+%%raw(`import './ReplyEditor.css'`)
 
 open Utils
 

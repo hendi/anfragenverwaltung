@@ -1,4 +1,4 @@
-%raw(`require('./FolderNavigation.css')`)
+%%raw(`import './FolderNavigation.css'`)
 
 open ConversationData
 

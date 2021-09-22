@@ -1,6 +1,6 @@
 // This file was automatically converted to ReScript from 'ConversationReadStatus.re'
 // Check the output and make sure to delete the original file
-%raw(`require('./ConversationReadStatus.css')`)
+%%raw(`import './ConversationReadStatus.css'`)
 
 open Utils
 

@@ -1,4 +1,4 @@
-%raw(`require('./ConversationRater.css')`)
+%%raw(`import './ConversationRater.css'`)
 
 open ConversationData
 
