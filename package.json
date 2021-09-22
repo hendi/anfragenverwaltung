@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@glennsl/bs-json": "3.0.0",
+    "@rescript/react": "^0.10.3",
     "autoprefixer": "7.1.6",
     "babel-core": "6.26.0",
     "babel-eslint": "7.2.3",
@@ -63,7 +64,8 @@
   },
   "devDependencies": {
     "bs-jest": "^0.3.2",
-    "reason-react": "0.5.3"
+    "reason-react": "0.5.3",
+    "rescript": "^9.1.4"
   },
   "jest": {
     "collectCoverageFrom": [
