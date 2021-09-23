@@ -23,6 +23,7 @@ type type_ =
   | Incoming
   | Outgoing
 
+@@warning("-30")
 type rec conversation = {
   id: int,
   immobilie_id: int,

@@ -1,4 +1,4 @@
-%raw(`require('./ConversationList.css')`)
+%%raw(`import './ConversationList.css'`)
 
 open Utils
 
