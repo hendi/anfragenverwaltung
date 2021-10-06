@@ -5,19 +5,16 @@
 open Belt.Option
 
 open ConversationData
-
 let filter_conversations = (
   interacted_with_conversations: list<int>,
   conversations: array<conversation>,
   filter_text: string,
-  folder: folder,
-) => {
+  folder: Folder.t,
+): array<conversation> => {
   let conversations =
     filter_text === ""
       ? conversations
-      : conversations
-        |> Array.to_list
-        |> List.filter(c =>
+      : conversations->Js.Array2.filter(c =>
           if filter_text == "" {
             true
           } else {
@@ -32,83 +29,138 @@ let filter_conversations = (
             string_contains(c.notes, filter_text)))))))
           }
         )
-        |> Array.of_list
 
   switch folder {
   | All =>
-    conversations
-    |> Array.to_list
-    |> List.filter(c =>
+    conversations->Js.Array2.filter(c =>
       !c.is_in_trash || List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
     )
-    |> Array.of_list
   | New =>
-    conversations
-    |> Array.to_list
-    |> List.filter((c: conversation) =>
-      (!c.is_in_trash && (c.rating == None && (!c.is_replied_to && !c.is_ignored))) ||
+    conversations->Js.Array2.filter((c: conversation) =>
+      (!c.is_in_trash && (c.rating == Unrated && (!c.is_replied_to && !c.is_ignored))) ||
         ((!c.is_in_trash && !c.is_read) ||
         List.exists((c_id: int) => c_id == c.id, interacted_with_conversations))
     )
-    |> Array.of_list
   | ByRating(rating) =>
-    conversations
-    |> Array.to_list
-    |> List.filter(c =>
+    conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && c.rating == rating) ||
         List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
     )
-    |> Array.of_list
   | Unreplied =>
-    conversations
-    |> Array.to_list
-    |> List.filter(c =>
+    conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && (!c.is_replied_to && !c.is_ignored)) ||
         List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
     )
-    |> Array.of_list
   | Replied =>
-    conversations
-    |> Array.to_list
-    |> List.filter(c =>
+    conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && c.has_been_replied_to) ||
         List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
     )
-    |> Array.of_list
   | Trash =>
-    conversations
-    |> Array.to_list
-    |> List.filter(c =>
+    conversations->Js.Array2.filter(c =>
       c.is_in_trash || List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
     )
-    |> Array.of_list
+  }
+}
+
+module Route = {
+  type t =
+    | ConversationList(Folder.t)
+    | Conversation(int)
+    | MassReply
+    | Unknown404
+
+  let fromUrlPath = (path: list<string>): t => {
+    switch path {
+    | list{} => ConversationList(New)
+    | list{"conversation", id} =>
+      switch Belt.Int.fromString(id) {
+      | Some(id) => Conversation(id)
+      | None => Unknown404
+      }
+    | list{"folder", str} =>
+      let folder = switch str {
+      | "all" => Folder.All->Some
+      | "new" => New->Some
+      | "unreplied" => Unreplied->Some
+      | "replied" => Replied->Some
+      | "trash" => Trash->Some
+      | _ => None
+      }
+
+      switch folder {
+      | None => Unknown404
+      | Some(folder) => ConversationList(folder)
+      }
+    | list{"folder", "by-rating", str} =>
+      let folder = switch str {
+      | "favorite" => Folder.ByRating(Green)
+      | "maybe" => ByRating(Yellow)
+      | "uninteresting" => ByRating(Red)
+      | "unrated"
+      | _ =>
+        ByRating(Unrated)
+      }
+
+      ConversationList(folder)
+    | _ => Unknown404
+    }
+  }
+
+  let toUrl = route => {
+    switch route {
+    | Unknown404 => "/not-found"
+    | Conversation(id) => "/conversation/" ++ Belt.Int.toString(id)
+    | MassReply => "/mass-reply"
+    | ConversationList(folder) =>
+      let folderStr = switch folder {
+      | All => "all"
+      | New => "new"
+      | Unreplied => "unreplied"
+      | Replied => "replied"
+      | Trash => "trash"
+      | ByRating(rating) =>
+        "by-rating" ++
+        switch rating {
+        | Unrated => "/unrated"
+        | Green => "/favorite"
+        | Yellow => "/maybe"
+        | Red => "/uninteresting"
+        }
+      }
+
+      `/folder/${folderStr}`
+    }
+  }
+}
+
+// Contains all mock data for the global state
+module Mock = {
+  let conversations: Js.Dict.t<conversation> = Js.Dict.empty()
+
+  // key= conversationId, value= message
+  let messages: Js.Dict.t<array<message>> = Js.Dict.empty()
+
+  let getMessages = (conversationId: int): array<message> => {
+    switch messages->Js.Dict.get(Belt.Int.toString(conversationId)) {
+    | Some(msges) => msges
+    | None => []
+    }
   }
 }
 
 module App = {
-  type route =
-    | ConversationList(folder)
-    | Conversation
-    | MassReply
   type state = {
-    route: route,
-    active_folder: folder,
     filter_text: string,
-    last_scroll_position: int,
     loading_conversations: bool,
     conversations: array<conversation>,
     loading_messages: bool,
-    current_conversation_messages: list<message>,
-    current_conversation: option<conversation>,
     interacted_with_conversations: list<int>,
     selected_conversations: list<int>,
-    timerId: ref<option<Js.Global.intervalId>>,
   }
 
   type action =
-    | ShowRoute(route)
-    | LoadingConversations
-    | LoadedConversations(array<conversation>)
+    | ShowRoute(Route.t)
     | LoadedConversationMessages(array<message>)
     | SetConversationRating(conversation, rating)
     | SetConversationTrash(conversation, bool)
@@ -116,7 +168,6 @@ module App = {
     | SetConversationIgnore(conversation, bool)
     | ToggleConversation(conversation)
     | SelectOrUnselectAllConversations(bool)
-    | ShowConversation(conversation)
     | ReplyToConversation(conversation, message)
     | SendMassReply(array<conversation>, string, array<string>, string => int)
     | SetMassTrash(array<conversation>)
@@ -124,23 +175,56 @@ module App = {
     | FilterTextChanged(string)
 
   let initialState = {
-    route: ConversationList(New),
-    last_scroll_position: 0,
-    active_folder: New,
     loading_conversations: true,
     conversations: [],
     loading_messages: false,
-    current_conversation_messages: list{},
-    current_conversation: None,
     interacted_with_conversations: list{},
     selected_conversations: list{},
-    timerId: ref(None),
     filter_text: "",
   }
 
   @react.component
-  let make = (~immobilie_id: int) => {
+  let make = (~immobilieId: int) => {
     let mainRef = React.useRef(Js.Nullable.null)
+
+    let url = RescriptReactRouter.useUrl()
+    let route = Route.fromUrlPath(url.path)
+
+    React.useEffect0(() => {
+      Route.toUrl(route)->RescriptReactRouter.replace
+      None
+    })
+
+    let conversationsQuery = Query.useQuery(~resource=#conversation, ~params=(), _ => {
+      ConversationData.fetchConversations(immobilieId)
+    })
+
+    let conversations = switch conversationsQuery {
+    | Success(convs) => convs
+    | _ => []
+    }
+
+    let (currentConversation, currentMessages) = switch route {
+    | Conversation(id) =>
+      let currentConversation = Mock.conversations->Js.Dict.get(Belt.Int.toString(id))
+      let currentMessages = Mock.getMessages(id)
+
+      (currentConversation, currentMessages)
+    | _ => (None, [])
+    }
+
+    let activeFolder = switch route {
+    | ConversationList(folder) => folder
+    | Conversation(id) =>
+      let found = conversations->Js.Array2.find(conv => {
+        conv.id == id
+      })
+      switch found {
+      | Some(conv) => ByRating(conv.rating)
+      | None => New
+      }
+    | _ => New
+    }
 
     let (state, send) = ReactUpdate.useReducer((state, action) =>
       switch action {
@@ -149,47 +233,17 @@ module App = {
           ...state,
           filter_text: text->Js.String2.trim->Js.String2.toLowerCase,
         })
-
-      | ShowRoute(ConversationList(folder)) =>
-        let scroll_to =
-          state.route == Conversation && folder == state.active_folder
-            ? state.last_scroll_position
-            : 0
-
-        ReactUpdate.UpdateWithSideEffects(
-          {
-            ...state,
-            active_folder: folder,
-            route: ConversationList(folder),
-            interacted_with_conversations: list{},
-            selected_conversations: list{},
-            current_conversation: None,
-          },
-          _self =>
-            switch mainRef.current->Js.Nullable.toOption {
-            | None => None
-            | Some(domNode) => Some(() => Utils.setScrollTop(domNode, scroll_to)->ignore)
-            },
-        )
       | ShowRoute(route) =>
-        ReactUpdate.Update({
-          ...state,
-          route: route,
-          current_conversation: None,
-          last_scroll_position: switch mainRef.current->Js.Nullable.toOption {
-          | None => -1
-          | Some(domNode) => Utils.getScrollTop(domNode)
+        // TODO: Add back the original scrollToTop behavior
+        ReactUpdate.UpdateWithSideEffects(
+          state,
+          _self => {
+            route->Route.toUrl->RescriptReactRouter.push
+            None
           },
-        })
-      | LoadingConversations => ReactUpdate.Update({...state, loading_conversations: true})
-      | LoadedConversations(conversations) =>
-        ReactUpdate.Update({
-          ...state,
-          loading_conversations: false,
-          conversations: conversations,
-        })
+        )
       | SetConversationRating(conversation: conversation, rating) =>
-        let new_rating = conversation.rating == Some(rating) ? None : Some(rating)
+        let new_rating = conversation.rating == rating ? Unrated : rating
         ReactUpdate.UpdateWithSideEffects(
           {
             ...state,
@@ -204,19 +258,15 @@ module App = {
                 c
               }
             , state.conversations),
-            current_conversation: switch state.current_conversation {
-            | Some(c) =>
-              c.id == conversation.id
-                ? Some({...conversation, rating: new_rating, is_read: true})
-                : state.current_conversation
-            | None => None
-            },
             interacted_with_conversations: List.append(
               state.interacted_with_conversations,
               list{conversation.id},
             ),
           },
-          _self => Some(() => rateConversation(conversation, new_rating, _ => ())),
+          _self => {
+            rateConversation(conversation, new_rating, _ => ())
+            None
+          },
         )
       | SaveConversationNotes(conversation: conversation, notes: string) =>
         ReactUpdate.UpdateWithSideEffects(
@@ -232,15 +282,11 @@ module App = {
                 c
               }
             , state.conversations),
-            current_conversation: switch state.current_conversation {
-            | Some(c) =>
-              c.id == conversation.id
-                ? Some({...conversation, notes: notes})
-                : state.current_conversation
-            | None => None
-            },
           },
-          _self => Some(() => storeNotesForConversation(conversation, notes, _ => ())),
+          _self => {
+            storeNotesForConversation(conversation, notes, _ => ())
+            None
+          },
         )
       | SetConversationTrash(conversation: conversation, is_in_trash) =>
         ReactUpdate.UpdateWithSideEffects(
@@ -257,23 +303,15 @@ module App = {
                 c
               }
             , state.conversations),
-            current_conversation: switch state.current_conversation {
-            | Some(c) =>
-              c.id == conversation.id
-                ? Some({
-                    ...conversation,
-                    is_in_trash: is_in_trash,
-                    is_read: is_in_trash,
-                  })
-                : state.current_conversation
-            | None => None
-            },
             interacted_with_conversations: List.append(
               state.interacted_with_conversations,
               list{conversation.id},
             ),
           },
-          _self => Some(() => trashConversation(conversation, is_in_trash, _ => ())),
+          _self => {
+            trashConversation(conversation, is_in_trash, _ => ())
+            None
+          },
         )
       | SetConversationReadStatus(conversation: conversation, is_read) =>
         ReactUpdate.UpdateWithSideEffects(
@@ -289,19 +327,15 @@ module App = {
                 c
               }
             , state.conversations),
-            current_conversation: switch state.current_conversation {
-            | Some(c) =>
-              c.id == conversation.id
-                ? Some({...conversation, is_read: is_read})
-                : state.current_conversation
-            | None => None
-            },
             interacted_with_conversations: List.append(
               state.interacted_with_conversations,
               list{conversation.id},
             ),
           },
-          _self => Some(() => setReadStatusForConversation(conversation, is_read, _ => ())),
+          _self => {
+            setReadStatusForConversation(conversation, is_read, _ => ())
+            None
+          },
         )
       | SetConversationIgnore(conversation: conversation, is_ignored) =>
         ReactUpdate.UpdateWithSideEffects(
@@ -317,15 +351,11 @@ module App = {
                 c
               }
             , state.conversations),
-            current_conversation: switch state.current_conversation {
-            | Some(c) =>
-              c.id == conversation.id
-                ? Some({...conversation, is_ignored: is_ignored})
-                : state.current_conversation
-            | None => None
-            },
           },
-          _self => Some(() => ignoreConversation(conversation, is_ignored, _ => ())),
+          _self => {
+            ignoreConversation(conversation, is_ignored, _ => ())
+            None
+          },
         )
       | ReplyToConversation(conversation: conversation, reply: message) =>
         ReactUpdate.Update({
@@ -343,18 +373,6 @@ module App = {
               c
             }
           , state.conversations),
-          current_conversation: switch state.current_conversation {
-          | Some(c) =>
-            c.id == conversation.id
-              ? Some({
-                  ...conversation,
-                  count_messages: c.count_messages + 1,
-                  is_replied_to: true,
-                  latest_message: reply,
-                })
-              : state.current_conversation
-          | None => None
-          },
         })
       | SendMassReply(
           conversations: array<conversation>,
@@ -377,24 +395,13 @@ module App = {
                 c
               }
             , state.conversations),
-            current_conversation: switch state.current_conversation {
-            | Some(c) =>
-              List.exists((x: conversation) => x.id == c.id, Array.to_list(conversations))
-                ? Some({
-                    ...c,
-                    count_messages: c.count_messages + 1,
-                    is_replied_to: true,
-                  })
-                : state.current_conversation
-            | None => None
-            },
           },
-          _self => Some(
-            () =>
-              postMassReply(immobilie_id, conversations, message_text, attachments, _ =>
-                cbFunc("")->ignore
-              ),
-          ),
+          _self => {
+            postMassReply(immobilieId, conversations, message_text, attachments, _ =>
+              cbFunc("")->ignore
+            )
+            None
+          },
         )
       | SetMassTrash(conversations) =>
         ReactUpdate.UpdateWithSideEffects(
@@ -413,43 +420,15 @@ module App = {
             , state.conversations),
             selected_conversations: list{},
           },
-          _self => Some(() => postMassTrash(immobilie_id, conversations)),
-        )
-      | ShowConversation(conversation) =>
-        ReactUpdate.UpdateWithSideEffects(
-          {
-            ...state,
-            loading_messages: true,
-            current_conversation_messages: list{},
-            conversations: Array.map((c: conversation): conversation =>
-              if c.id == conversation.id {
-                {
-                  ...c,
-                  is_read: true,
-                }
-              } else {
-                c
-              }
-            , state.conversations),
-            current_conversation: Some({...conversation, is_read: true}),
-            route: Conversation,
-            interacted_with_conversations: List.append(
-              state.interacted_with_conversations,
-              list{conversation.id},
-            ),
+          _self => {
+            postMassTrash(immobilieId, conversations)
+            None
           },
-          self => Some(
-            () =>
-              fetchConversationMessages(conversation, payload =>
-                self.send(LoadedConversationMessages(payload))
-              ),
-          ),
         )
-      | LoadedConversationMessages(messages) =>
+      | LoadedConversationMessages(_messages) =>
         ReactUpdate.Update({
           ...state,
           loading_messages: false,
-          current_conversation_messages: messages |> Array.to_list,
         })
       | ToggleConversation(conversationToToggle) =>
         let selected_conversations = Utils.element_in_list(
@@ -467,136 +446,115 @@ module App = {
         let selected_conversations = selected
           ? Array.map(
               (c: conversation) => c.id,
-              filter_conversations(
-                list{},
-                state.conversations,
-                state.filter_text,
-                state.active_folder,
-              ),
-            ) |> Array.to_list
-          : list{}
-        ReactUpdate.Update({...state, selected_conversations: selected_conversations})
+              filter_conversations(list{}, state.conversations, state.filter_text, activeFolder),
+            )
+          : []
+        ReactUpdate.Update({
+          ...state,
+          selected_conversations: selected_conversations->Belt.List.fromArray,
+        })
       }
     , initialState)
 
-    let loadConversations = (~silent) => {
-      if !silent {
-        send(LoadingConversations)
-      }
-
-      ConversationData.fetchConversations(immobilie_id, payload =>
-        send(LoadedConversations(payload))
-      )
-    }
-
-    // useEffect with empty dependency array is basically equivalent to
-    // componentDidMount (the first render of the component)
-    React.useEffect0(() => {
-      loadConversations(~silent=false)
-      state.timerId := Some(Js.Global.setInterval(() => loadConversations(~silent=true), 1000 * 60))
-      let watcherId = RescriptReactRouter.watchUrl(url =>
-        switch url.hash {
-        | "conversations" => send(ShowRoute(ConversationList(All)))
-        | _ => send(ShowRoute(ConversationList(All)))
-        }
-      )
-
-      // useEffect returns an optional cleanup function (equivalent to self.onUnmount)
-      Some(
-        () => {
-          RescriptReactRouter.unwatchUrl(watcherId)
-        },
-      )
-    })
-
-    <div className="App">
-      <FolderNavigation
-        onClick={(folder, _event) => send(ShowRoute(ConversationList(folder)))}
-        active_folder=state.active_folder
-        counter={filter_conversations(list{}, state.conversations, "")}
-      />
-      <div className="ConversationListView" ref={ReactDOM.Ref.domRef(mainRef)}>
-        <ConversationList
-          folder=state.active_folder
-          loading=state.loading_conversations
-          current_conversation=state.current_conversation
-          conversations={filter_conversations(
-            state.interacted_with_conversations,
-            state.conversations,
-            state.filter_text,
-            state.active_folder,
-          )}
-          selected_conversations=state.selected_conversations
-          onClick={(conversation, _event) => send(ShowConversation(conversation))}
-          onFilterTextChange={event =>
-            send(FilterTextChanged((event->ReactEvent.Form.target)["value"]))}
-          onRating={(conversation, rating, _event) =>
-            send(SetConversationRating(conversation, rating))}
-          onTrash={(conversation, trash, _event) => send(SetConversationTrash(conversation, trash))}
-          onReadStatus={(conversation, is_read, _event) =>
-            send(SetConversationReadStatus(conversation, is_read))}
-          onToggle={conversation => send(ToggleConversation(conversation))}
-          onSelectAll={_conversation => send(SelectOrUnselectAllConversations(true))}
-          onMassReply={_event => send(ShowRoute(MassReply))}
-          onMassTrash={_event => {
-            open Utils
-            send(
-              SetMassTrash(
-                array_filter(
-                  (c: conversation) => element_in_list(c.id, state.selected_conversations),
-                  state.conversations,
-                ),
-              ),
-            )
-          }}
-          isFiltered={String.length(state.filter_text) > 0}
-          hasAnyConversations={Array.length(state.conversations) > 0}
-        />
+    <div>
+      <div className="debug">
+        {route->Route.toUrl->React.string}
+        {switch conversationsQuery {
+        | Loading => "loading conversations..."
+        | Success(convs) => "Loaded conversations: " ++ Belt.Array.length(convs)->Belt.Int.toString
+        | _ => ""
+        }->React.string}
       </div>
-      <div className="MessageListView">
-        {switch state.route {
-        | Conversation =>
-          switch state.current_conversation {
-          | Some(conversation) =>
-            <Conversation
-              key={conversation.id |> string_of_int}
-              conversation
-              loading=state.loading_messages
-              messages={state.current_conversation_messages |> Array.of_list}
-              onRating={(conversation, rating, _event) =>
-                send(SetConversationRating(conversation, rating))}
-              onTrash={(conversation, trash, _event) =>
-                send(SetConversationTrash(conversation, trash))}
-              onReadStatus={(conversation, is_read, _event) =>
-                send(SetConversationReadStatus(conversation, is_read))}
-              onReplySent={(reply: message) => send(ReplyToConversation(conversation, reply))}
-              onIgnore={conversation => send(SetConversationIgnore(conversation, true))}
-              onSaveNotes={(conversation, notes) =>
-                send(SaveConversationNotes(conversation, notes))}
-              onBack={_event => send(ShowRoute(ConversationList(state.active_folder)))}
-            />
-          | _ => <div> {React.string("Invalid current_conversation")} </div>
-          }
-        | MassReply =>
-          open Utils
-          <MassReply
-            conversations={array_filter(
-              (c: conversation) => element_in_list(c.id, state.selected_conversations),
-              state.conversations,
+      <div className="App">
+        <FolderNavigation
+          onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
+          activeFolder
+          conversations
+        />
+        <div className="ConversationListView" ref={ReactDOM.Ref.domRef(mainRef)}>
+          <ConversationList
+            folder=activeFolder
+            loading={conversationsQuery == Loading}
+            // TODO: this should get the actual conversation
+            current_conversation=currentConversation
+            conversations={filter_conversations(
+              state.interacted_with_conversations,
+              conversations,
+              state.filter_text,
+              activeFolder,
             )}
-            onMassReplySent={(conversations, message_text, attachments, cbFunc) =>
-              send(SendMassReply(conversations, message_text, attachments, cbFunc))}
+            selected_conversations=state.selected_conversations
+            onConversationClick={(conversation: conversation) =>
+              send(ShowRoute(Route.Conversation(conversation.id)))}
+            onFilterTextChange={event =>
+              send(FilterTextChanged((event->ReactEvent.Form.target)["value"]))}
+            onRating={(conversation, rating, _event) =>
+              send(SetConversationRating(conversation, rating))}
+            onTrash={(conversation, trash, _event) =>
+              send(SetConversationTrash(conversation, trash))}
+            onReadStatus={(conversation, is_read, _event) =>
+              send(SetConversationReadStatus(conversation, is_read))}
+            onToggle={conversation => send(ToggleConversation(conversation))}
+            onSelectAll={_conversation => send(SelectOrUnselectAllConversations(true))}
+            onMassReply={_event => send(ShowRoute(MassReply))}
+            onMassTrash={_event => {
+              open Utils
+              send(
+                SetMassTrash(
+                  array_filter(
+                    (c: conversation) => element_in_list(c.id, state.selected_conversations),
+                    state.conversations,
+                  ),
+                ),
+              )
+            }}
+            isFiltered={String.length(state.filter_text) > 0}
+            hasAnyConversations={Array.length(state.conversations) > 0}
           />
-        | ConversationList(_) => <div />
-        }}
+        </div>
+        <div className="MessageListView">
+          {switch url.path {
+          | list{"conversation", id} => <div> {React.string("Conversation id " ++ id)} </div>
+          | _ => React.null
+          }}
+          {switch route {
+          | Unknown404 => <div> {React.string("404 not found")} </div>
+          | Conversation(_id) =>
+            switch currentConversation {
+            | Some(conversation) =>
+              <Conversation
+                key={conversation.id |> string_of_int}
+                conversation
+                loading=state.loading_messages
+                messages={currentMessages}
+                onRating={(conversation, rating, _event) =>
+                  send(SetConversationRating(conversation, rating))}
+                onTrash={(conversation, trash, _event) =>
+                  send(SetConversationTrash(conversation, trash))}
+                onReadStatus={(conversation, is_read, _event) =>
+                  send(SetConversationReadStatus(conversation, is_read))}
+                onReplySent={(reply: message) => send(ReplyToConversation(conversation, reply))}
+                onIgnore={conversation => send(SetConversationIgnore(conversation, true))}
+                onSaveNotes={(conversation, notes) =>
+                  send(SaveConversationNotes(conversation, notes))}
+                onBack={_event => send(ShowRoute(ConversationList(activeFolder)))}
+              />
+            | _ => <div> {React.string("Invalid current_conversation")} </div>
+            }
+          | MassReply =>
+            open Utils
+            <MassReply
+              conversations={array_filter(
+                (c: conversation) => element_in_list(c.id, state.selected_conversations),
+                state.conversations,
+              )}
+              onMassReplySent={(conversations, message_text, attachments, cbFunc) =>
+                send(SendMassReply(conversations, message_text, attachments, cbFunc))}
+            />
+          | ConversationList(_) => <div />
+          }}
+        </div>
       </div>
     </div>
-  }
-}
-
-let default = immobilie_id => {
-  switch ReactDOM.querySelector("#root") {
-  | Some(root) => ReactDOM.render(<App immobilie_id />, root)
-  | None => () // do nothing
   }
 }

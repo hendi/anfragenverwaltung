@@ -5,7 +5,14 @@
  external register_service_worker : unit => unit = "default";
  */
 switch ReactDOM.querySelector("#root") {
-| Some(root) => ReactDOM.render(<App.App immobilie_id=177865 />, root)
+| Some(root) =>
+  let client = ReactQuery.Client.make()
+  ReactDOM.render(
+    <ReactQuery.Client.Provider client>
+      <App.App immobilieId=177865 />
+    </ReactQuery.Client.Provider>,
+    root,
+  )
 | None => () // do nothing
 }
 /* register_service_worker(); */

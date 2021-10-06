@@ -1,23 +1,26 @@
-let isProd = true
+@val external process: 'a = "process"
 
-let apiBaseUrl = if isProd {
+let apiBaseUrl = if process["env"]["NODE_ENV"] == "production" {
   ""
 } else {
-  "http://localhost:8000"
+  "http://localhost:8001"
 }
 
 type rating =
   | Green
   | Yellow
   | Red
+  | Unrated
 
-type folder =
-  | All
-  | New
-  | ByRating(option<rating>)
-  | Unreplied
-  | Replied
-  | Trash
+module Folder = {
+  type t =
+    | All
+    | New
+    | ByRating(rating)
+    | Unreplied
+    | Replied
+    | Trash
+}
 
 type type_ =
   | Incoming
@@ -37,7 +40,7 @@ type rec conversation = {
   date_last_message: string,
   count_messages: int,
   latest_message: message,
-  rating: option<rating>,
+  rating: rating,
   has_attachments: bool,
   notes: string,
   is_read: bool,
@@ -81,10 +84,10 @@ module Decode = {
       |> (
         rating =>
           switch rating {
-          | Some("green") => Some(Green)
-          | Some("yellow") => Some(Yellow)
-          | Some("red") => Some(Red)
-          | _ => None
+          | Some("green") => Green
+          | Some("yellow") => Yellow
+          | Some("red") => Red
+          | _ => Unrated
           }
       ),
       has_attachments: json |> field("has_attachments", bool),
@@ -130,28 +133,18 @@ module Decode = {
   and many_attachments = (json): array<attachment> => json |> Json.Decode.array(single_attachment)
 }
 
-let fetchConversations = (immobilie_id, callback) => {
-  open Js.Promise
+let fetchConversations = (immobilie_id): Js.Promise.t<array<conversation>> => {
+  open Promise2
   Fetch.fetchWithInit(
     apiBaseUrl ++ ("/anfragen/immobilie/" ++ (string_of_int(immobilie_id) ++ "/conversations")),
     Fetch.RequestInit.make(~credentials=Include, ()),
   )
-  |> then_(Fetch.Response.json)
-  |> then_(json =>
-    json
-    |> Decode.many_conversations
-    |> (
-      conversations => {
-        callback(conversations)
-        resolve()
-      }
-    )
-  )
-  |> ignore
+  ->then(Fetch.Response.json)
+  ->then(json => json |> Decode.many_conversations |> resolve)
 }
 
 let fetchConversationMessages = (conversation: conversation, callback) => {
-  open Js.Promise
+  open Promise2
   Fetch.fetchWithInit(
     apiBaseUrl ++
     ("/anfragen/immobilie/" ++
@@ -160,8 +153,8 @@ let fetchConversationMessages = (conversation: conversation, callback) => {
     (string_of_int(conversation.id) ++ "/messages")))),
     Fetch.RequestInit.make(~credentials=Include, ()),
   )
-  |> then_(Fetch.Response.json)
-  |> then_(json =>
+  ->then(Fetch.Response.json)
+  ->then(json =>
     json
     |> Decode.many_messages
     |> (
@@ -171,7 +164,7 @@ let fetchConversationMessages = (conversation: conversation, callback) => {
       }
     )
   )
-  |> ignore
+  ->ignore
 }
 
 /*
@@ -342,16 +335,16 @@ let changeConversation = (conversation: conversation, data, callback) => {
   |> ignore
 }
 
-let rateConversation = (conversation: conversation, rating: option<rating>, callback) => {
+let rateConversation = (conversation: conversation, rating: rating, callback) => {
   let data = Js.Dict.empty()
   Js.Dict.set(
     data,
     "rating",
     switch rating {
-    | Some(Green) => Js.Json.string("green")
-    | Some(Yellow) => Js.Json.string("yellow")
-    | Some(Red) => Js.Json.string("red")
-    | None => Js.Json.string("")
+    | Green => Js.Json.string("green")
+    | Yellow => Js.Json.string("yellow")
+    | Red => Js.Json.string("red")
+    | Unrated => Js.Json.string("")
     },
   )
   changeConversation(conversation, data, callback)

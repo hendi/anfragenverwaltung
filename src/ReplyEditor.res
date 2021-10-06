@@ -10,14 +10,13 @@ type state = {
 
 type action =
   | MessageTextChanged(string)
-  | SendMessage
   | UploadStarted
   | UploadFinished
 
 @react.component
 let make = (
   ~conversation: ConversationData.conversation,
-  ~onReplySent: (ConversationData.conversation, string, array<string>) => unit,
+  ~onReplySend: (ConversationData.conversation, string, array<string>) => unit,
   ~onIgnoreConversation: ReactEvent.Mouse.t => unit,
 ) => {
   let initialState = {
@@ -41,19 +40,6 @@ let make = (
     | MessageTextChanged(text) => {
         ...state,
         message_text: text,
-      }
-    | SendMessage => {
-        let attachments = switch filepondRef.current {
-        | Some(filepond) => {
-            let files = filepond->Filepond.Instance.getFiles
-            files->Belt.Array.map(f => f.serverId)
-          }
-        | None => []
-        }
-
-        onReplySent(conversation, state.message_text, attachments)
-
-        {...state, message_text: "", message_sent: true}
       }
     }
   }, initialState)
@@ -113,7 +99,17 @@ let make = (
         className="btn-send btn btn-primary pull-right"
         disabled={String.length(state.message_text) == 0}
         /* || state.uploads_in_progress != 0 */
-        onClick={_event => send(SendMessage)}>
+        onClick={evt => {
+          let attachments = switch filepondRef.current {
+          | Some(filepond) => {
+              let files = filepond->Filepond.Instance.getFiles
+              files->Belt.Array.map(f => f.serverId)
+            }
+          | None => []
+          }
+
+          onReplySend(conversation, state.message_text, attachments)
+        }}>
         {textEl("Antwort senden")}
       </button>
       <button

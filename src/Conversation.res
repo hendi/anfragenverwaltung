@@ -9,9 +9,18 @@ type state = {
   notes: string,
 }
 
+module Reply = {
+  type t = {
+    conversation: conversation,
+    messageText: string,
+    attachments: array<string>,
+  }
+}
+
 type action =
   | LoadingMessages
   | LoadedMessages(array<message>)
+  | SendReply(Reply.t)
   | ReplySent(message)
   | IgnoreConversation
   | ToggleNotes
@@ -28,13 +37,13 @@ function (domNode) {
 @react.component
 let make = (
   ~conversation: conversation,
-  ~onReplySent,
+  ~onReplySent: message => unit,
   ~onRating,
   ~onTrash,
   ~onReadStatus,
   ~onIgnore,
   ~onSaveNotes,
-  ~onBack,
+  ~onBack as _,
   ~messages: array<message>,
   ~loading: bool,
 ) => {
@@ -44,9 +53,22 @@ let make = (
     notes: conversation.notes,
   }
 
+  Js.log2("messages", messages)
+
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
-    | ReplySent(reply) =>
+    | SendReply(reply) =>
+      ReactUpdate.UpdateWithSideEffects(
+        state,
+        _self => {
+          postReply(reply.conversation, reply.messageText, reply.attachments, msg => {
+            Js.log2("test", msg)
+            onReplySent(msg)
+          })
+          None
+        },
+      )
+    | ReplySent(_reply) =>
       ReactUpdate.UpdateWithSideEffects(
         state,
         /* TODO
@@ -56,9 +78,10 @@ let make = (
              },*/
         _self => {
           switch scrollableRef.current->Js.Nullable.toOption {
-          | Some(domNode) => Some(() => scrollElementToTop(domNode)->ignore)
-          | None => None
+          | Some(domNode) => scrollElementToTop(domNode)->ignore
+          | None => ()
           }
+          None
         },
       )
     | IgnoreConversation => ReactUpdate.NoUpdate
@@ -67,7 +90,10 @@ let make = (
     | SaveNotes =>
       ReactUpdate.UpdateWithSideEffects(
         state,
-        _self => Some(() => onSaveNotes(conversation, state.notes)),
+        _self => {
+          onSaveNotes(conversation, state.notes)
+          None
+        },
       )
     | LoadedMessages(_)
     | LoadingMessages =>
@@ -75,11 +101,13 @@ let make = (
     }
   , initialState)
 
-  let sendReply = (conversation: conversation, message_text, attachments) =>
-    postReply(conversation, message_text, attachments, reply => {
-      send(ReplySent(reply))
-      onReplySent(reply)
-    })
+  let onReplySend = (conversation: conversation, messageText, attachments) => {
+    SendReply({
+      Reply.conversation: conversation,
+      messageText: messageText,
+      attachments: attachments,
+    })->send
+  }
 
   let ignoreConversation = (conversation: conversation) => {
     send(IgnoreConversation)
@@ -90,10 +118,10 @@ let make = (
     className={list{
       "Conversation",
       switch conversation.rating {
-      | Some(Green) => "rating-green"
-      | Some(Yellow) => "rating-yellow"
-      | Some(Red) => "rating-red"
-      | _ => "rating-unrated"
+      | Green => "rating-green"
+      | Yellow => "rating-yellow"
+      | Red => "rating-red"
+      | Unrated => "rating-unrated"
       },
       conversation.is_in_trash ? "is_in_trash" : "",
     } |> String.concat(" ")}>
@@ -178,7 +206,7 @@ let make = (
         <ReplyEditor
           key={Belt.Int.toString(conversation.id)}
           conversation
-          onReplySent={sendReply}
+          onReplySend
           onIgnoreConversation={_event => ignoreConversation(conversation)}
         />
       } else {

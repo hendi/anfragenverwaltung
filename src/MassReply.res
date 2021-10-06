@@ -58,12 +58,8 @@ let make = (~conversations, ~onMassReplySent) => {
           | None => []
           }
 
-          Some(
-            () =>
-              onMassReplySent(conversations, self.state.message_text, attachments, _ =>
-                cbSent(self)
-              ),
-          )
+          onMassReplySent(conversations, self.state.message_text, attachments, _ => cbSent(self))
+          None
         },
       )
     | ReplySent => ReactUpdate.Update({...state, sending: false, sent: true})
