@@ -45,8 +45,8 @@ let useDependentQuery = (
   ~resource: resource,
   ~refetchOnWindowFocus=RefetchOnWindowFocus.Never,
   ~params: option<'params>,
-  queryFn,
-) => {
+  queryFn: 'promise => Js.Promise.t<'ret>,
+): t<'ret> => {
   let {data, status, error, _} = ReactQuery.useQuery({
     queryKey: (resource, params),
     queryFn: ({queryKey: (_, params)}) =>
@@ -71,10 +71,23 @@ let useDependentQuery = (
   }
 }
 
-let useMutation = (~mutationKey=?, ~onSuccess=?, ~onError=?, mutationFn) => {
+let useMutation = (
+  ~mutationKey: option<'key>=?,
+  ~onSuccess: option<('ret, 'params, 'context) => option<Js.Promise.t<unit>>>=?,
+  ~onError: option<('err, 'params, 'context) => unit>=?,
+  ~onSettled: option<('data, Js.Exn.t, 'variables, 'context) => unit>=?,
+  ~onMutate: option<'params => Js.Promise.t<'context>>=?,
+  mutationFn: 'params => Js.Promise.t<'ret>,
+) => {
   let {data, status, error, mutate, isLoading: _} = ReactQuery.useMutation(
     mutationFn,
-    {mutationKey: mutationKey, onSuccess: onSuccess, onError: onError},
+    {
+      mutationKey: mutationKey,
+      onSuccess: onSuccess,
+      onError: onError,
+      onSettled: onSettled,
+      onMutate: onMutate,
+    },
   )
 
   (

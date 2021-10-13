@@ -16,7 +16,13 @@ module Client = {
   external invalidateQueries: (t, 'queryKey) => unit = "invalidateQueries"
 
   @ocaml.doc("Unlike `invalidateQueries`, `setQueryData` matches by exact query keys only.") @send
-  external setQueryData: (t, 'queryKey, option<'data> => 'data) => unit = "setQueryData"
+  external setQueryData: (t, 'queryKey, 'data) => unit = "setQueryData"
+
+  @send
+  external cancelQueries: (t, 'queryKey) => Js.Promise.t<unit> = "cancelQueries"
+
+  @send
+  external getQueryData: (t, 'queryKey) => option<'data> = "getQueryData"
 
   @send
   external clear: t => unit = "clear"
@@ -67,10 +73,12 @@ external useQuery: queryOptions<'queryKey, 'data> => queryResult<'data> = "useQu
 external useQueries: array<queryOptions<'queryKey, 'data>> => array<queryResult<'data>> =
   "useQueries"
 
-type mutationOptions<'mutationKey, 'variables, 'data> = {
+type mutationOptions<'mutationKey, 'variables, 'data, 'context> = {
   mutationKey: option<'mutationKey>,
-  onSuccess: option<('data, 'variables) => option<Js.Promise.t<unit>>>,
-  onError: option<(Js.Exn.t, 'variables) => unit>,
+  onSuccess: option<('data, 'variables, 'context) => option<Js.Promise.t<unit>>>,
+  onError: option<(Js.Exn.t, 'variables, 'context) => unit>,
+  onMutate: option<'variables => Js.Promise.t<'context>>,
+  onSettled: option<('data, Js.Exn.t, 'variables, 'context) => unit>,
 }
 
 type mutationResult<'variables, 'data> = {
@@ -84,7 +92,7 @@ type mutationResult<'variables, 'data> = {
 @module("react-query")
 external useMutation: (
   'variables => Js.Promise.t<'data>,
-  mutationOptions<'mutationKey, 'variables, 'data>,
+  mutationOptions<'mutationKey, 'variables, 'data, 'context>,
 ) => mutationResult<'variables, 'data> = "useMutation"
 
 @set external setCancel: (Js.Promise.t<_>, unit => unit) => unit = "cancel"

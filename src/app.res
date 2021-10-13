@@ -134,18 +134,71 @@ module Route = {
   }
 }
 
-// Contains all mock data for the global state
-module Mock = {
-  let conversations: Js.Dict.t<conversation> = Js.Dict.empty()
+module Hooks = {
+  let useMarkConversationAsReadMutation = client => {
+    let (_, mutation) = Query.useMutation(
+      ~onMutate=(params: (conversation, bool)) => {
+        let (conversation, _) = params
 
-  // key= conversationId, value= message
-  let messages: Js.Dict.t<array<message>> = Js.Dict.empty()
+        let queryKey = (#conversation, conversation.id)
+        client
+        ->ReactQuery.Client.cancelQueries(queryKey)
+        ->Promise2.thenResolve(() => {
+          let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
 
-  let getMessages = (conversationId: int): array<message> => {
-    switch messages->Js.Dict.get(Belt.Int.toString(conversationId)) {
-    | Some(msges) => msges
-    | None => []
-    }
+          client->ReactQuery.Client.setQueryData(queryKey, conversation)
+
+          // return "rollback function" as context
+          () => {
+            client->ReactQuery.Client.setQueryData(queryKey, previousConv)
+          }
+        })
+      },
+      ~onError=(_err, _params, cleanup) => {
+        cleanup()
+      },
+      ~onSettled=(_data, _err, _params, _context) => {
+        client->ReactQuery.Client.invalidateQueries(#conversation)
+      },
+      params => {
+        let (conversation, isRead) = params
+        setReadStatusForConversation(conversation, isRead)
+      },
+    )
+    mutation
+  }
+
+  let useRateConversationMutation = client => {
+    let (_, mutation) = Query.useMutation(
+      ~onMutate=(params: (conversation, rating)) => {
+        let (conversation, _) = params
+
+        let queryKey = (#conversation, conversation.id)
+        client
+        ->ReactQuery.Client.cancelQueries(queryKey)
+        ->Promise2.thenResolve(() => {
+          let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
+
+          client->ReactQuery.Client.setQueryData(queryKey, conversation)
+
+          // return "rollback function" as context
+          () => {
+            client->ReactQuery.Client.setQueryData(queryKey, previousConv)
+          }
+        })
+      },
+      ~onError=(_err, _params, cleanup) => {
+        cleanup()
+      },
+      ~onSettled=(_data, _err, _params, _context) => {
+        client->ReactQuery.Client.invalidateQueries(#conversation)
+      },
+      params => {
+        let (conversation, rating) = params
+        rateConversation(conversation, rating)
+      },
+    )
+    mutation
   }
 }
 
@@ -190,6 +243,8 @@ module App = {
     let url = RescriptReactRouter.useUrl()
     let route = Route.fromUrlPath(url.path)
 
+    let client = ReactQuery.Client.useQueryClient()
+
     React.useEffect0(() => {
       Route.toUrl(route)->RescriptReactRouter.replace
       None
@@ -204,14 +259,33 @@ module App = {
     | _ => []
     }
 
-    let (currentConversation, currentMessages) = switch route {
+    let currentConversation = switch route {
     | Conversation(id) =>
-      let currentConversation = Mock.conversations->Js.Dict.get(Belt.Int.toString(id))
-      let currentMessages = Mock.getMessages(id)
-
-      (currentConversation, currentMessages)
-    | _ => (None, [])
+      let currentConversation = Js.Array2.find(conversations, conv => {
+        conv.id == id
+      })
+      currentConversation
+    | _ => None
     }
+
+    let currentMessagesQuery = Query.useDependentQuery(
+      ~resource=#message,
+      ~params=currentConversation,
+      conversation => {
+        ConversationData.fetchMessages(
+          ~conversationId=conversation.id,
+          ~immobilieId=conversation.immobilie_id,
+        )
+      },
+    )
+
+    let currentMessages = switch currentMessagesQuery {
+    | Success(messages) => messages
+    | _ => []
+    }
+
+    let rateConversationMutation = Hooks.useRateConversationMutation(client)
+    let markConversationAsReadMutation = Hooks.useMarkConversationAsReadMutation(client)
 
     let activeFolder = switch route {
     | ConversationList(folder) => folder
@@ -242,32 +316,6 @@ module App = {
             None
           },
         )
-      | SetConversationRating(conversation: conversation, rating) =>
-        let new_rating = conversation.rating == rating ? Unrated : rating
-        ReactUpdate.UpdateWithSideEffects(
-          {
-            ...state,
-            conversations: Array.map((c: conversation): conversation =>
-              if c.id == conversation.id {
-                {
-                  ...c,
-                  rating: new_rating,
-                  is_read: true,
-                }
-              } else {
-                c
-              }
-            , state.conversations),
-            interacted_with_conversations: List.append(
-              state.interacted_with_conversations,
-              list{conversation.id},
-            ),
-          },
-          _self => {
-            rateConversation(conversation, new_rating, _ => ())
-            None
-          },
-        )
       | SaveConversationNotes(conversation: conversation, notes: string) =>
         ReactUpdate.UpdateWithSideEffects(
           {
@@ -284,7 +332,7 @@ module App = {
             , state.conversations),
           },
           _self => {
-            storeNotesForConversation(conversation, notes, _ => ())
+            /* storeNotesForConversation(conversation, notes, _ => ()) */
             None
           },
         )
@@ -309,31 +357,7 @@ module App = {
             ),
           },
           _self => {
-            trashConversation(conversation, is_in_trash, _ => ())
-            None
-          },
-        )
-      | SetConversationReadStatus(conversation: conversation, is_read) =>
-        ReactUpdate.UpdateWithSideEffects(
-          {
-            ...state,
-            conversations: Array.map((c: conversation): conversation =>
-              if c.id == conversation.id {
-                {
-                  ...c,
-                  is_read: is_read,
-                }
-              } else {
-                c
-              }
-            , state.conversations),
-            interacted_with_conversations: List.append(
-              state.interacted_with_conversations,
-              list{conversation.id},
-            ),
-          },
-          _self => {
-            setReadStatusForConversation(conversation, is_read, _ => ())
+            /* trashConversation(conversation, is_in_trash, _ => ()) */
             None
           },
         )
@@ -353,7 +377,7 @@ module App = {
             , state.conversations),
           },
           _self => {
-            ignoreConversation(conversation, is_ignored, _ => ())
+            /* ignoreConversation(conversation, is_ignored, _ => ()) */
             None
           },
         )
@@ -453,10 +477,18 @@ module App = {
           ...state,
           selected_conversations: selected_conversations->Belt.List.fromArray,
         })
+      | _ => ReactUpdate.NoUpdate
       }
     , initialState)
 
+    let onReadStatus = (conversation, isRead) =>
+      markConversationAsReadMutation(. (conversation, isRead))
+
+    let onRating = (conversation: conversation, rating, _event) =>
+      rateConversationMutation(. (conversation, rating))
+
     <div>
+      <ReactQueryDevtools position=#"bottom-right" />
       <div className="debug">
         {route->Route.toUrl->React.string}
         {switch conversationsQuery {
@@ -475,25 +507,22 @@ module App = {
           <ConversationList
             folder=activeFolder
             loading={conversationsQuery == Loading}
-            // TODO: this should get the actual conversation
-            current_conversation=currentConversation
+            currentConversation
             conversations={filter_conversations(
               state.interacted_with_conversations,
               conversations,
               state.filter_text,
               activeFolder,
             )}
-            selected_conversations=state.selected_conversations
+            selectedConversations=state.selected_conversations
             onConversationClick={(conversation: conversation) =>
               send(ShowRoute(Route.Conversation(conversation.id)))}
             onFilterTextChange={event =>
               send(FilterTextChanged((event->ReactEvent.Form.target)["value"]))}
-            onRating={(conversation, rating, _event) =>
-              send(SetConversationRating(conversation, rating))}
+            onRating
             onTrash={(conversation, trash, _event) =>
               send(SetConversationTrash(conversation, trash))}
-            onReadStatus={(conversation, is_read, _event) =>
-              send(SetConversationReadStatus(conversation, is_read))}
+            onReadStatus
             onToggle={conversation => send(ToggleConversation(conversation))}
             onSelectAll={_conversation => send(SelectOrUnselectAllConversations(true))}
             onMassReply={_event => send(ShowRoute(MassReply))}
@@ -527,12 +556,10 @@ module App = {
                 conversation
                 loading=state.loading_messages
                 messages={currentMessages}
-                onRating={(conversation, rating, _event) =>
-                  send(SetConversationRating(conversation, rating))}
+                onRating
                 onTrash={(conversation, trash, _event) =>
                   send(SetConversationTrash(conversation, trash))}
-                onReadStatus={(conversation, is_read, _event) =>
-                  send(SetConversationReadStatus(conversation, is_read))}
+                onReadStatus
                 onReplySent={(reply: message) => send(ReplyToConversation(conversation, reply))}
                 onIgnore={conversation => send(SetConversationIgnore(conversation, true))}
                 onSaveNotes={(conversation, notes) =>

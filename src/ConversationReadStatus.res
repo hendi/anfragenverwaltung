@@ -7,16 +7,19 @@ open Utils
 open ConversationData
 
 @react.component
-let make = (~conversation, ~onReadStatus) => {
+let make = (~conversation, ~onReadStatus: (conversation, bool) => unit) => {
+  let onClick = evt => {
+    ReactEvent.Mouse.preventDefault(evt)
+    onReadStatus(conversation, !conversation.is_read)
+  }
+
   <div className="ConversationReadStatus">
     {if conversation.is_read && !conversation.is_in_trash {
-      <span
-        className="btn" onClick={onReadStatus(conversation, false)} title="Als ungelesen markieren">
+      <span className="btn" onClick title="Als ungelesen markieren">
         <i className="icon-check" /> {textEl("Gelesen")}
       </span>
     } else {
-      <span
-        className="btn" onClick={onReadStatus(conversation, true)} title="Als gelesen markieren">
+      <span className="btn" onClick title="Als gelesen markieren">
         <i className="icon-check-empty" /> {textEl("Gelesen")}
       </span>
     }}

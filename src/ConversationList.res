@@ -8,9 +8,9 @@ open ConversationData
 let make = (
   ~folder: Folder.t,
   ~loading: bool,
-  ~current_conversation: option<conversation>,
+  ~currentConversation: option<conversation>,
   ~conversations: array<conversation>,
-  ~selected_conversations: list<int>,
+  ~selectedConversations: list<int>,
   ~onConversationClick,
   ~onRating,
   ~onTrash,
@@ -29,19 +29,19 @@ let make = (
         <div>
           <button
             className="btn"
-            disabled={List.length(selected_conversations) == Array.length(conversations)}
+            disabled={List.length(selectedConversations) == Array.length(conversations)}
             onClick=onSelectAll>
             <i className="icon-check" /> {textEl(`Alle auswählen`)}
           </button>
           <button
             className="btn"
-            disabled={selected_conversations |> List.length == 0}
+            disabled={selectedConversations |> List.length == 0}
             onClick=onMassReply>
             <i className="icon-mail-reply-all" /> {textEl("Sammelantwort")}
           </button>
           <button
             className="btn pull-right"
-            disabled={selected_conversations |> List.length == 0}
+            disabled={selectedConversations |> List.length == 0}
             onClick=onMassTrash>
             <i className="icon-trash" /> {textEl(`Löschen`)}
           </button>
@@ -64,11 +64,11 @@ let make = (
       } else if Array.length(conversations) > 0 {
         conversations
         ->Belt.Array.map((conversation: conversation) => {
-          let active = Some(conversation) == current_conversation
+          let active = Some(conversation) == currentConversation
           <ConversationListItem
             key={string_of_int(conversation.id)}
             conversation
-            selected={element_in_list(conversation.id, selected_conversations)}
+            selected={element_in_list(conversation.id, selectedConversations)}
             active
             onClick={evt => {
               ReactEvent.Mouse.preventDefault(evt)

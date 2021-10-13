@@ -40,7 +40,7 @@ let make = (
   ~onReplySent: message => unit,
   ~onRating,
   ~onTrash,
-  ~onReadStatus,
+  ~onReadStatus: (conversation, bool) => unit,
   ~onIgnore,
   ~onSaveNotes,
   ~onBack as _,
@@ -52,8 +52,6 @@ let make = (
     show_notes: false,
     notes: conversation.notes,
   }
-
-  Js.log2("messages", messages)
 
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
