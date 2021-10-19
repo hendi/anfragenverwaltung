@@ -204,3 +204,93 @@ class ChangeConversation(CsrfExemptMixin, View, JSONResponseMixin):
 
 
         return self.render_json_response(conversation.to_json())
+
+
+def qs_for_folder(qs, folder):
+    if folder == "New":
+        return qs.filter(is_in_trash=False). \
+            filter(
+                Q(rating="", is_replied_to=False, is_ignored=False)
+                | Q(is_read=False)
+            )
+
+    elif folder == "Unreplied":
+        return qs.filter(is_in_trash=False, is_replied_to=False, is_ignored=False)
+
+    elif folder == "Green":
+        return qs.filter(is_in_trash=False, rating="green")
+
+    elif folder == "Yellow":
+        return qs.filter(is_in_trash=False, rating="yellow")
+
+    elif folder == "Red":
+        return qs.filter(is_in_trash=False, rating="red")
+
+    elif folder == "Unrated":
+        return qs.filter(is_in_trash=False, rating="")
+
+    elif folder == "Replied":
+        return qs.filter(is_in_trash=False, has_been_replied_to=True)
+
+    elif folder == "All":
+        return qs.filter(is_in_trash=False)
+
+    elif folder == "Trash":
+        return qs.filter(is_in_trash=True)
+
+    else:
+        raise Exception("invalid `folder`")
+
+
+class FolderCountsForImmobilie(View, JSONResponseMixin):
+    def get(self, request, immo_id):
+        # show all messages
+        qs = Conversation.objects.filter(immobilie_id=immo_id)
+
+        counts = {
+            "New": qs_for_folder(qs, "New").count(),
+            "Unreplied": qs_for_folder(qs, "Unreplied").count(),
+            "Green": qs_for_folder(qs, "Green").count(),
+            "Yellow": qs_for_folder(qs, "Yellow").count(),
+            "Red": qs_for_folder(qs, "Red").count(),
+            "Unrated": qs_for_folder(qs, "Unrated").count(),
+            "Replied": qs_for_folder(qs, "Replied").count(),
+            "All": qs_for_folder(qs, "All").count(),
+            "Trash": qs_for_folder(qs, "Trash").count(),
+        }
+
+        return self.render_json_response(counts)
+
+
+class ConversationListForFolder(View, JSONResponseMixin):
+    def get(self, request, immo_id, folder):
+        # filter by Immobilie
+        qs = Conversation.objects.filter(immobilie_id=immo_id)
+
+        # filter by Folder
+        try:
+            qs = qs_for_folder(qs, folder)
+        except:
+            raise Http404
+
+        conversations = [conversation.to_json() for conversation in qs]
+        conversations = sorted(conversations, reverse=True, key=lambda k: k["date_last_message"])
+
+        # handle limit and pagination
+        try:
+            limit = max(min(50, int(request.GET.get("limit"))), 1)
+        except:
+            limit = 10
+
+        try:
+            page = max(int(request.GET.get("page")), 1)
+        except:
+            page = 1
+
+        start = (page-1) * limit
+        end = start + limit
+
+        return self.render_json_response({
+            "data": conversations[start:end],
+            "more": end < len(conversations)
+        })
