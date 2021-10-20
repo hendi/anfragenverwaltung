@@ -262,6 +262,17 @@ class FolderCountsForImmobilie(View, JSONResponseMixin):
         return self.render_json_response(counts)
 
 
+def search_by_string(conv, s):
+    return s in conv["name"].lower() \
+        or s in conv["email"].lower() \
+        or s in conv["phone"].lower() \
+        or s in conv["city"].lower() \
+        or s in conv["zipcode"].lower() \
+        or s in conv["street"].lower() \
+        or s in conv["latest_message"]["content"].lower() \
+        or s in conv["notes"].lower()
+
+
 class ConversationListForFolder(View, JSONResponseMixin):
     def get(self, request, immo_id, folder):
         # filter by Immobilie
@@ -275,6 +286,11 @@ class ConversationListForFolder(View, JSONResponseMixin):
 
         conversations = [conversation.to_json() for conversation in qs]
         conversations = sorted(conversations, reverse=True, key=lambda k: k["date_last_message"])
+
+        # handle search
+        search_string = request.GET.get("search", "").strip().lower()
+        if len(search_string) >= 3:
+            conversations = [conv for conv in conversations if search_by_string(conv, search_string)]
 
         # handle limit and pagination
         try:
@@ -292,5 +308,6 @@ class ConversationListForFolder(View, JSONResponseMixin):
 
         return self.render_json_response({
             "data": conversations[start:end],
-            "more": end < len(conversations)
+            "more": end < len(conversations),
+            "result_count": len(conversations),
         })
