@@ -134,7 +134,7 @@ class MassTrash(CsrfExemptMixin, View, JSONResponseMixin):
     def post(self, request, immo_id):
         data = json.loads(request.body.decode("utf-8"))
 
-        conversations = Conversation.objects.filter(id__in=data.get("conversation_ids", []), immobilie_id=immo_idid)
+        conversations = Conversation.objects.filter(id__in=data.get("conversation_ids", []), immobilie_id=immo_id)
         conversations.update(is_in_trash=True, is_read=True)
 
         return self.render_json_response({"status": "ok"})
