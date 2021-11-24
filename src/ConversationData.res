@@ -208,20 +208,18 @@ let fetchMessages = (~conversationId: int, ~immobilieId: int): Js.Promise.t<arra
  */
 let postReply = (
   conversation: conversation,
-  message_text: string,
+  msg: string,
   attachments: array<string>,
-  callback,
-) => {
+): Js.Promise.t<message> => {
   let dict = Js.Dict.empty()
-  Js.Dict.set(dict, "message", Js.Json.string(message_text))
+  Js.Dict.set(dict, "message", Js.Json.string(msg))
   Js.Dict.set(dict, "attachments", Js.Json.stringArray(attachments))
-  open Js.Promise
   Fetch.fetchWithInit(
     apiBaseUrl ++
     ("/anfragen/immobilie/" ++
-    (string_of_int(conversation.immobilie_id) ++
+    (Belt.Int.toString(conversation.immobilie_id) ++
     ("/conversations/" ++
-    (string_of_int(conversation.id) ++ "/reply")))),
+    (Belt.Int.toString(conversation.id) ++ "/reply")))),
     Fetch.RequestInit.make(
       ~credentials=Include,
       ~method_=Post,
@@ -229,18 +227,8 @@ let postReply = (
       (),
     ),
   )
-  |> then_(Fetch.Response.json)
-  |> then_(json =>
-    json
-    |> Decode.single_message
-    |> (
-      message => {
-        callback(message)
-        resolve()
-      }
-    )
-  )
-  |> ignore
+  ->Promise2.then(Fetch.Response.json)
+  ->Promise2.thenResolve(json => json->Decode.single_message)
 }
 
 let postMassReply = (
@@ -341,7 +329,7 @@ let storeNotesForConversation = (conversation: conversation, notes: string) => {
   updateConversation(~id=conversation.id, ~immobilieId=conversation.immobilie_id, data)
 }
 
-let trashConversation = (conversation: conversation, is_in_trash: bool) => {
+let updateTrashConversation = (conversation: conversation, is_in_trash: bool) => {
   let data = Js.Dict.empty()
   Js.Dict.set(data, is_in_trash ? "trash" : "untrash", Js.Json.string("x"))
   updateConversation(~id=conversation.id, ~immobilieId=conversation.immobilie_id, data)

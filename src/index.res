@@ -9,7 +9,7 @@ switch ReactDOM.querySelector("#root") {
   let client = ReactQuery.Client.make()
   ReactDOM.render(
     <ReactQuery.Client.Provider client>
-      <App.App immobilieId=177865 />
+      <App immobilieId=177865 />
     </ReactQuery.Client.Provider>,
     root,
   )

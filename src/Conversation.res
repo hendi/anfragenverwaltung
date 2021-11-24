@@ -9,6 +9,18 @@ type state = {
   notes: string,
 }
 
+module TrashButton = {
+  @react.component
+  let make = (~onClick, ~isInTrash: bool) => {
+    <button className="ConversationTrasher" onClick>
+      {if isInTrash {
+        <span className="btn"> <i className="icon-undo" /> {textEl("Wiederherstellen")} </span>
+      } else {
+        <span className="btn"> <i className="icon-trash" /> {textEl(`Löschen`)} </span>
+      }}
+    </button>
+  }
+}
 module Reply = {
   type t = {
     conversation: conversation,
@@ -20,12 +32,10 @@ module Reply = {
 type action =
   | LoadingMessages
   | LoadedMessages(array<message>)
-  | SendReply(Reply.t)
   | ReplySent(message)
   | IgnoreConversation
   | ToggleNotes
   | NotesChanged(string)
-  | SaveNotes
 
 let scrollElementToTop: Dom.element => int = %raw(`
 function (domNode) {
@@ -37,7 +47,7 @@ function (domNode) {
 @react.component
 let make = (
   ~conversation: conversation,
-  ~onReplySent: message => unit,
+  ~onReplySend: (conversation, string, array<string>) => unit,
   ~onRating,
   ~onTrash,
   ~onReadStatus: (conversation, bool) => unit,
@@ -53,19 +63,15 @@ let make = (
     notes: conversation.notes,
   }
 
+  let scrollUp = () =>
+    switch scrollableRef.current->Js.Nullable.toOption {
+    | Some(domNode) => scrollElementToTop(domNode)->ignore
+    | None => ()
+    }
+
+  //TODO: Scroll to top when a reply has been sent
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
-    | SendReply(reply) =>
-      ReactUpdate.UpdateWithSideEffects(
-        state,
-        _self => {
-          postReply(reply.conversation, reply.messageText, reply.attachments, msg => {
-            Js.log2("test", msg)
-            onReplySent(msg)
-          })
-          None
-        },
-      )
     | ReplySent(_reply) =>
       ReactUpdate.UpdateWithSideEffects(
         state,
@@ -85,27 +91,11 @@ let make = (
     | IgnoreConversation => ReactUpdate.NoUpdate
     | ToggleNotes => ReactUpdate.Update({...state, show_notes: !state.show_notes})
     | NotesChanged(notes) => ReactUpdate.Update({...state, notes: notes})
-    | SaveNotes =>
-      ReactUpdate.UpdateWithSideEffects(
-        state,
-        _self => {
-          onSaveNotes(conversation, state.notes)
-          None
-        },
-      )
     | LoadedMessages(_)
     | LoadingMessages =>
       ReactUpdate.NoUpdate
     }
   , initialState)
-
-  let onReplySend = (conversation: conversation, messageText, attachments) => {
-    SendReply({
-      Reply.conversation: conversation,
-      messageText: messageText,
-      attachments: attachments,
-    })->send
-  }
 
   let ignoreConversation = (conversation: conversation) => {
     send(IgnoreConversation)
@@ -127,7 +117,12 @@ let make = (
       <div className="pull-right" style={ReactDOM.Style.make(~paddingTop="2px", ())}>
         <ConversationPrinter conversation />
         <ConversationReadStatus conversation onReadStatus />
-        <ConversationTrasher conversation onTrash />
+        <TrashButton
+          isInTrash={conversation.is_in_trash}
+          onClick={_evt => {
+            onTrash(conversation, !conversation.is_in_trash)
+          }}
+        />
         <ConversationRater conversation onRating />
       </div>
       <h2> {textEl(conversation.name)} </h2>
@@ -175,7 +170,7 @@ let make = (
             {if state.notes != conversation.notes {
               <button
                 className="btn btn-primary"
-                onClick={_event => send(SaveNotes)}
+                onClick={_event => onSaveNotes(conversation, state.notes)}
                 disabled={state.notes == conversation.notes}>
                 {textEl("Notizen speichern")}
               </button>
@@ -204,7 +199,10 @@ let make = (
         <ReplyEditor
           key={Belt.Int.toString(conversation.id)}
           conversation
-          onReplySend
+          onReplySend={(conversation, msg, attachments) => {
+            onReplySend(conversation, msg, attachments)
+            scrollUp()
+          }}
           onIgnoreConversation={_event => ignoreConversation(conversation)}
         />
       } else {
