@@ -329,8 +329,8 @@ let updateTrashConversation = (conversation: conversation, is_in_trash: bool) =>
   updateConversation(~id=conversation.id, ~immobilieId=conversation.immobilie_id, data)
 }
 
-let ignoreConversation = (conversation: conversation, is_ignored: bool) => {
+let ignoreConversation = (~id: int, ~immobilieId: int, isIgnored: bool) => {
   let data = Js.Dict.empty()
-  Js.Dict.set(data, is_ignored ? "ignore" : "unignore", Js.Json.string("x"))
-  updateConversation(~id=conversation.id, ~immobilieId=conversation.immobilie_id, data)
+  Js.Dict.set(data, isIgnored ? "ignore" : "unignore", Js.Json.string("x"))
+  updateConversation(~id, ~immobilieId, data)
 }

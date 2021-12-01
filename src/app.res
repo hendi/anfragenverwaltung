@@ -307,6 +307,50 @@ module Hooks = {
     mutation
   }
 
+  let useIgnoreConversationMutation = client => {
+    let (_, mutation) = Query.useMutation(
+      ~onMutate=(params: (int, int, bool)) => {
+        let (conversationId, _immobilieId, isIgnored) = params
+
+        let queryKey = #conversation
+        client
+        ->ReactQuery.Client.cancelQueries(queryKey)
+        ->Promise2.thenResolve(() => {
+          let previousConvs: option<array<conversation>> =
+            client->ReactQuery.Client.getQueryData(queryKey)
+
+          let newConversations = previousConvs->Belt.Option.map(previousConvs => {
+            previousConvs->Belt.Array.map((conv: conversation) => {
+              if conv.id == conversationId {
+                {...conv, is_ignored: isIgnored}
+              } else {
+                conv
+              }
+            })
+          })
+
+          client->ReactQuery.Client.setQueryData(queryKey, newConversations)
+
+          () => {
+            client->ReactQuery.Client.setQueryData(queryKey, previousConvs)
+          }
+        })
+      },
+      ~onError=(_err, _params, cleanup) => {
+        cleanup()
+      },
+      ~onSettled=(_data, _err, _params, _context) => {
+        client->ReactQuery.Client.invalidateQueries(#conversation)
+      },
+      (params: (int, int, bool)) => {
+        let (conversationId, immobilieId, isIgnored) = params
+        ignoreConversation(~id=conversationId, ~immobilieId, isIgnored)
+      },
+    )
+
+    mutation
+  }
+
   let useSendReplyMutation = client => {
     let (_, mutation) = Query.useMutation(
       ~onMutate=(params: (conversation, string, array<string>)) => {
@@ -417,6 +461,7 @@ let make = (~immobilieId: int) => {
   let updateTrashConversationMutation = Hooks.useUpdateTrashMutation(client)
   let postReplyMutation = Hooks.useSendReplyMutation(client)
   let trashAllMutation = Hooks.useTrashAllMutation(client)
+  let ignoreConversationMutation = Hooks.useIgnoreConversationMutation(client)
 
   let activeFolder = switch route {
   | ConversationList(folder) => folder
@@ -449,26 +494,6 @@ let make = (~immobilieId: int) => {
         {...state, selected_conversations: selected_conversations},
         _self => {
           newRoute->Route.toUrl->RescriptReactRouter.push
-          None
-        },
-      )
-    | SetConversationIgnore(conversation: conversation, is_ignored) =>
-      ReactUpdate.UpdateWithSideEffects(
-        {
-          ...state,
-          conversations: Array.map((c: conversation): conversation =>
-            if c.id == conversation.id {
-              {
-                ...c,
-                is_ignored: is_ignored,
-              }
-            } else {
-              c
-            }
-          , state.conversations),
-        },
-        _self => {
-          /* ignoreConversation(conversation, is_ignored, _ => ()) */
           None
         },
       )
@@ -609,6 +634,7 @@ let make = (~immobilieId: int) => {
             | Loading => true
             | _ => false
             }
+
             <Conversation
               key={conversation.id |> string_of_int}
               conversation
@@ -618,7 +644,9 @@ let make = (~immobilieId: int) => {
               onTrash
               onReadStatus
               onReplySend
-              onIgnore={conversation => send(SetConversationIgnore(conversation, true))}
+              onIgnore={() => {
+                ignoreConversationMutation(. (conversation.id, immobilieId, true))
+              }}
               onSaveNotes
               onBack={_event => send(ShowRoute(ConversationList(activeFolder)))}
             />

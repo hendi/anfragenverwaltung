@@ -33,7 +33,6 @@ type action =
   | LoadingMessages
   | LoadedMessages(array<message>)
   | ReplySent(message)
-  | IgnoreConversation
   | ToggleNotes
   | NotesChanged(string)
 
@@ -51,7 +50,7 @@ let make = (
   ~onRating,
   ~onTrash,
   ~onReadStatus: (conversation, bool) => unit,
-  ~onIgnore,
+  ~onIgnore: unit => unit,
   ~onSaveNotes,
   ~onBack as _,
   ~messages: array<message>,
@@ -88,7 +87,6 @@ let make = (
           None
         },
       )
-    | IgnoreConversation => ReactUpdate.NoUpdate
     | ToggleNotes => ReactUpdate.Update({...state, show_notes: !state.show_notes})
     | NotesChanged(notes) => ReactUpdate.Update({...state, notes: notes})
     | LoadedMessages(_)
@@ -97,10 +95,6 @@ let make = (
     }
   , initialState)
 
-  let ignoreConversation = (conversation: conversation) => {
-    send(IgnoreConversation)
-    onIgnore(conversation)
-  }
 
   <div
     className={list{
@@ -203,7 +197,7 @@ let make = (
             onReplySend(conversation, msg, attachments)
             scrollUp()
           }}
-          onIgnoreConversation={_event => ignoreConversation(conversation)}
+          onIgnoreConversation={_event => onIgnore()}
         />
       } else {
         React.null
