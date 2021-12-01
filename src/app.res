@@ -6,59 +6,59 @@ open Belt.Option
 
 open ConversationData
 let filterConversations = (
-  interacted_with_conversations: list<int>,
+  interactedWithConversations: list<int>,
   conversations: array<conversation>,
-  filter_text: string,
+  filterText: string,
   folder: Folder.t,
 ): array<conversation> => {
   let conversations =
-    filter_text === ""
+    filterText === ""
       ? conversations
       : conversations->Js.Array2.filter(c =>
-          if filter_text == "" {
+          if filterText == "" {
             true
           } else {
             open Utils
-            string_contains(c.name |> String.lowercase, filter_text) ||
-            (string_contains(c.email |> String.lowercase, filter_text) ||
-            (string_contains(c.phone->getWithDefault("") |> String.lowercase, filter_text) ||
-            (string_contains(c.city->getWithDefault("") |> String.lowercase, filter_text) ||
-            (string_contains(c.zipcode->getWithDefault("") |> String.lowercase, filter_text) ||
-            (string_contains(c.street->getWithDefault("") |> String.lowercase, filter_text) ||
-            (string_contains(c.latest_message.content |> String.lowercase, filter_text) ||
-            string_contains(c.notes, filter_text)))))))
+            string_contains(c.name |> String.lowercase, filterText) ||
+            (string_contains(c.email |> String.lowercase, filterText) ||
+            (string_contains(c.phone->getWithDefault("") |> String.lowercase, filterText) ||
+            (string_contains(c.city->getWithDefault("") |> String.lowercase, filterText) ||
+            (string_contains(c.zipcode->getWithDefault("") |> String.lowercase, filterText) ||
+            (string_contains(c.street->getWithDefault("") |> String.lowercase, filterText) ||
+            (string_contains(c.latest_message.content |> String.lowercase, filterText) ||
+            string_contains(c.notes, filterText)))))))
           }
         )
 
   switch folder {
   | All =>
     conversations->Js.Array2.filter(c =>
-      !c.is_in_trash || List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
+      !c.is_in_trash || List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
     )
   | New =>
     conversations->Js.Array2.filter((c: conversation) =>
       (!c.is_in_trash && (c.rating == Unrated && (!c.is_replied_to && !c.is_ignored))) ||
         ((!c.is_in_trash && !c.is_read) ||
-        List.exists((c_id: int) => c_id == c.id, interacted_with_conversations))
+        List.exists((c_id: int) => c_id == c.id, interactedWithConversations))
     )
   | ByRating(rating) =>
     conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && c.rating == rating) ||
-        List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
+        List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
     )
   | Unreplied =>
     conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && (!c.is_replied_to && !c.is_ignored)) ||
-        List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
+        List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
     )
   | Replied =>
     conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && c.has_been_replied_to) ||
-        List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
+        List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
     )
   | Trash =>
     conversations->Js.Array2.filter(c =>
-      c.is_in_trash || List.exists((c_id: int) => c_id == c.id, interacted_with_conversations)
+      c.is_in_trash || List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
     )
   }
 }
@@ -342,31 +342,25 @@ module Hooks = {
 }
 
 type state = {
-  filter_text: string,
+  filterText: string,
   conversations: array<conversation>,
-  loading_messages: bool,
-  interacted_with_conversations: list<int>,
+  interactedWithConversations: list<int>,
   selected_conversations: list<int>, // list of conversation ids
 }
 
 type action =
   | ShowRoute(Route.t)
-  | LoadedConversationMessages(array<message>)
-  | SetConversationRating(conversation, rating)
   | SetConversationIgnore(conversation, bool)
   | SelectOrUnselectConversation(int)
   | SelectOrUnselectAllConversations(bool)
-  | ReplyToConversation(conversation, message)
   | SendMassReply(array<conversation>, string, array<string>, string => int)
-  | SetMassTrash(array<conversation>)
   | FilterTextChanged(string)
 
 let initialState = {
   conversations: [],
-  loading_messages: false,
-  interacted_with_conversations: list{},
+  interactedWithConversations: list{},
   selected_conversations: list{},
-  filter_text: "",
+  filterText: "",
 }
 
 @react.component
@@ -442,7 +436,7 @@ let make = (~immobilieId: int) => {
     | FilterTextChanged(text) =>
       ReactUpdate.Update({
         ...state,
-        filter_text: text->Js.String2.trim->Js.String2.toLowerCase,
+        filterText: text->Js.String2.trim->Js.String2.toLowerCase,
       })
     | ShowRoute(newRoute) =>
       let selected_conversations = if newRoute != route {
@@ -478,23 +472,6 @@ let make = (~immobilieId: int) => {
           None
         },
       )
-    | ReplyToConversation(conversation: conversation, reply: message) =>
-      ReactUpdate.Update({
-        ...state,
-        conversations: Array.map((c: conversation): conversation =>
-          if c.id == conversation.id {
-            {
-              ...c,
-              count_messages: c.count_messages + 1,
-              is_replied_to: true,
-              is_read: true,
-              latest_message: reply,
-            }
-          } else {
-            c
-          }
-        , state.conversations),
-      })
     | SendMassReply(
         conversations: array<conversation>,
         message_text: string,
@@ -524,34 +501,6 @@ let make = (~immobilieId: int) => {
           None
         },
       )
-    | SetMassTrash(conversations) =>
-      ReactUpdate.UpdateWithSideEffects(
-        {
-          ...state,
-          conversations: Array.map((c: conversation): conversation =>
-            if List.exists((x: conversation) => x.id == c.id, Array.to_list(conversations)) {
-              {
-                ...c,
-                is_read: true,
-                is_in_trash: true,
-              }
-            } else {
-              c
-            }
-          , state.conversations),
-          selected_conversations: list{},
-        },
-        _self => {
-          let conversationIds = conversations->Belt.Array.map(conv => conv.id)
-          postMassTrash(immobilieId, conversationIds)->ignore
-          None
-        },
-      )
-    | LoadedConversationMessages(_messages) =>
-      ReactUpdate.Update({
-        ...state,
-        loading_messages: false,
-      })
     | SelectOrUnselectConversation(conversationId) =>
       let newSelectedConversations = if (
         !Belt.List.some(state.selected_conversations, convId => convId === conversationId)
@@ -566,7 +515,7 @@ let make = (~immobilieId: int) => {
       let selected_conversations = selected
         ? Array.map(
             (c: conversation) => c.id,
-            filterConversations(list{}, conversations, state.filter_text, activeFolder),
+            filterConversations(list{}, conversations, state.filterText, activeFolder),
           )
         : []
 
@@ -624,9 +573,9 @@ let make = (~immobilieId: int) => {
           loading={conversationsQuery == Loading}
           currentConversation
           conversations={filterConversations(
-            state.interacted_with_conversations,
+            state.interactedWithConversations,
             conversations,
-            state.filter_text,
+            state.filterText,
             activeFolder,
           )}
           selectedConversations=state.selected_conversations
@@ -642,7 +591,7 @@ let make = (~immobilieId: int) => {
           onToggleSelectAll={selected => send(SelectOrUnselectAllConversations(selected))}
           onMassReply={_event => send(ShowRoute(MassReply))}
           onMassTrash
-          isFiltered={String.length(state.filter_text) > 0}
+          isFiltered={String.length(state.filterText) > 0}
           hasAnyConversations={Array.length(state.conversations) > 0}
         />
       </div>
@@ -656,10 +605,14 @@ let make = (~immobilieId: int) => {
         | Conversation(_id) =>
           switch currentConversation {
           | Some(conversation) =>
+            let isLoadingMessages = switch currentMessagesQuery {
+            | Loading => true
+            | _ => false
+            }
             <Conversation
               key={conversation.id |> string_of_int}
               conversation
-              loading=state.loading_messages
+              loading=isLoadingMessages
               messages={currentMessages}
               onRating
               onTrash
