@@ -10,7 +10,7 @@ let make = (
   ~onRating,
   ~onTrash as _,
   ~onReadStatus as _,
-  ~onToggle,
+  ~onToggleSelect: (conversation) => unit,
   ~conversation: conversation,
   ~selected,
   ~active,
@@ -36,7 +36,7 @@ let make = (
             className="toggle"
             type_="checkbox"
             checked=selected
-            onChange={_ => onToggle(conversation)}
+            onChange={_ => onToggleSelect(conversation)}
           />
           <span className="name pointer" ?onClick> {textEl(conversation.name)} </span>
         </div>

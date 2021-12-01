@@ -15,11 +15,11 @@ let make = (
   ~onRating,
   ~onTrash,
   ~onReadStatus,
-  ~onToggle,
-  ~onSelectAll,
+  ~onToggleSelect: conversation => unit,
+  ~onToggleSelectAll: bool => unit,
   ~onFilterTextChange,
   ~onMassReply,
-  ~onMassTrash,
+  ~onMassTrash: unit => unit,
   ~hasAnyConversations,
   ~isFiltered,
 ) => {
@@ -27,12 +27,18 @@ let make = (
     <div className="header">
       {if folder != Trash {
         <div>
-          <button
-            className="btn"
-            disabled={List.length(selectedConversations) == Array.length(conversations)}
-            onClick=onSelectAll>
-            <i className="icon-check" /> {textEl(`Alle auswählen`)}
-          </button>
+          {
+            let (text, selected) = if (
+              List.length(selectedConversations) == Array.length(conversations)
+            ) {
+              (`Auswahl löschen`, false)
+            } else {
+              (`Alle auswählen`, true)
+            }
+            <button className="btn" onClick={_evt => onToggleSelectAll(selected)}>
+              <i className="icon-check" /> {textEl(text)}
+            </button>
+          }
           <button
             className="btn"
             disabled={selectedConversations |> List.length == 0}
@@ -42,7 +48,7 @@ let make = (
           <button
             className="btn pull-right"
             disabled={selectedConversations |> List.length == 0}
-            onClick=onMassTrash>
+            onClick={_evt => onMassTrash()}>
             <i className="icon-trash" /> {textEl(`Löschen`)}
           </button>
         </div>
@@ -80,7 +86,7 @@ let make = (
             onRating
             onTrash
             onReadStatus
-            onToggle
+            onToggleSelect
           />
         })
         ->React.array

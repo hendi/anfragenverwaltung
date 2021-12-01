@@ -206,11 +206,9 @@ let fetchMessages = (~conversationId: int, ~immobilieId: int): Js.Promise.t<arra
      |> ignore
    );
  */
-let postReply = (
-  conversation: conversation,
-  msg: string,
-  attachments: array<string>,
-): Js.Promise.t<message> => {
+let postReply = (conversation: conversation, msg: string, attachments: array<string>): Js.Promise.t<
+  message,
+> => {
   let dict = Js.Dict.empty()
   Js.Dict.set(dict, "message", Js.Json.string(msg))
   Js.Dict.set(dict, "attachments", Js.Json.stringArray(attachments))
@@ -264,24 +262,20 @@ let postMassReply = (
   |> ignore
 }
 
-let postMassTrash = (immobilie_id, conversations: array<conversation>) => {
-  let json = {
+let postMassTrash = (immobilie_id, conversationIds: array<int>): Js.Promise.t<Js.Json.t> => {
+  let jsonStr = {
     open Json.Encode
-    object_(list{("conversation_ids", array(int, Array.map(c => c.id, conversations)))})
-  } |> Js.Json.stringify
-  open Js.Promise
+    object_(list{("conversation_ids", array(int, conversationIds))})->Js.Json.stringify
+  }
   Fetch.fetchWithInit(
     apiBaseUrl ++ ("/anfragen/immobilie/" ++ (string_of_int(immobilie_id) ++ "/masstrash")),
     Fetch.RequestInit.make(
       ~credentials=Include,
       ~method_=Post,
-      ~body=Fetch.BodyInit.make(json),
+      ~body=Fetch.BodyInit.make(jsonStr),
       (),
     ),
-  )
-  |> then_(Fetch.Response.json)
-  |> then_(_json => resolve())
-  |> ignore
+  )->Promise2.then(Fetch.Response.json)
 }
 
 let updateConversation = (~id: int, ~immobilieId: int, data: Js.Dict.t<Js.Json.t>): Js.Promise.t<

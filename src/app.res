@@ -5,7 +5,7 @@
 open Belt.Option
 
 open ConversationData
-let filter_conversations = (
+let filterConversations = (
   interacted_with_conversations: list<int>,
   conversations: array<conversation>,
   filter_text: string,
@@ -267,6 +267,46 @@ module Hooks = {
     mutation
   }
 
+  let useTrashAllMutation = client => {
+    let (_, mutation) = Query.useMutation(
+      ~onMutate=(params: (int, array<int>)) => {
+        let (_immobilieId, conversationIds) = params
+        let queryKey = #conversation
+
+        client
+        ->ReactQuery.Client.cancelQueries(queryKey)
+        ->Promise2.thenResolve(() => {
+          let previousConvs: option<array<conversation>> =
+            client->ReactQuery.Client.getQueryData(queryKey)
+
+          let newConversations = previousConvs->Belt.Option.map(previousConvs => {
+            previousConvs->Belt.Array.map((conv: conversation) => {
+              {...conv, is_in_trash: true}
+            })
+          })
+
+          client->ReactQuery.Client.setQueryData(queryKey, newConversations)
+
+          () => {
+            client->ReactQuery.Client.setQueryData(queryKey, previousConvs)
+          }
+        })
+      },
+      ~onError=(_err, _params, cleanup) => {
+        cleanup()
+      },
+      ~onSettled=(_data, _err, _params, _context) => {
+        client->ReactQuery.Client.invalidateQueries(#conversation)
+      },
+      (params: (int, array<int>)) => {
+        let (immobilieId, conversationIds) = params
+        postMassTrash(immobilieId, conversationIds)
+      },
+    )
+
+    mutation
+  }
+
   let useSendReplyMutation = client => {
     let (_, mutation) = Query.useMutation(
       ~onMutate=(params: (conversation, string, array<string>)) => {
@@ -306,7 +346,7 @@ type state = {
   conversations: array<conversation>,
   loading_messages: bool,
   interacted_with_conversations: list<int>,
-  selected_conversations: list<int>,
+  selected_conversations: list<int>, // list of conversation ids
 }
 
 type action =
@@ -314,7 +354,7 @@ type action =
   | LoadedConversationMessages(array<message>)
   | SetConversationRating(conversation, rating)
   | SetConversationIgnore(conversation, bool)
-  | ToggleConversation(conversation)
+  | SelectOrUnselectConversation(int)
   | SelectOrUnselectAllConversations(bool)
   | ReplyToConversation(conversation, message)
   | SendMassReply(array<conversation>, string, array<string>, string => int)
@@ -382,6 +422,7 @@ let make = (~immobilieId: int) => {
   let updateConversationNotesMutation = Hooks.useUpdateConversationNotes(client)
   let updateTrashConversationMutation = Hooks.useUpdateTrashMutation(client)
   let postReplyMutation = Hooks.useSendReplyMutation(client)
+  let trashAllMutation = Hooks.useTrashAllMutation(client)
 
   let activeFolder = switch route {
   | ConversationList(folder) => folder
@@ -403,12 +444,17 @@ let make = (~immobilieId: int) => {
         ...state,
         filter_text: text->Js.String2.trim->Js.String2.toLowerCase,
       })
-    | ShowRoute(route) =>
+    | ShowRoute(newRoute) =>
+      let selected_conversations = if newRoute != route {
+        list{}
+      } else {
+        state.selected_conversations
+      }
       // TODO: Add back the original scrollToTop behavior
       ReactUpdate.UpdateWithSideEffects(
-        state,
+        {...state, selected_conversations: selected_conversations},
         _self => {
-          route->Route.toUrl->RescriptReactRouter.push
+          newRoute->Route.toUrl->RescriptReactRouter.push
           None
         },
       )
@@ -496,7 +542,8 @@ let make = (~immobilieId: int) => {
           selected_conversations: list{},
         },
         _self => {
-          postMassTrash(immobilieId, conversations)
+          let conversationIds = conversations->Belt.Array.map(conv => conv.id)
+          postMassTrash(immobilieId, conversationIds)->ignore
           None
         },
       )
@@ -505,22 +552,24 @@ let make = (~immobilieId: int) => {
         ...state,
         loading_messages: false,
       })
-    | ToggleConversation(conversationToToggle) =>
-      let selected_conversations = Utils.element_in_list(
-        conversationToToggle.id,
-        state.selected_conversations,
-      )
-      /* remove */
-        ? List.filter((c_id: int) => c_id != conversationToToggle.id, state.selected_conversations)
-        : List.append(state.selected_conversations, list{conversationToToggle.id})
-      ReactUpdate.Update({...state, selected_conversations: selected_conversations})
+    | SelectOrUnselectConversation(conversationId) =>
+      let newSelectedConversations = if (
+        !Belt.List.some(state.selected_conversations, convId => convId === conversationId)
+      ) {
+        list{conversationId, ...state.selected_conversations}
+      } else {
+        Belt.List.filter(state.selected_conversations, convId => convId != conversationId)
+      }
+
+      ReactUpdate.Update({...state, selected_conversations: newSelectedConversations})
     | SelectOrUnselectAllConversations(selected) =>
       let selected_conversations = selected
         ? Array.map(
             (c: conversation) => c.id,
-            filter_conversations(list{}, state.conversations, state.filter_text, activeFolder),
+            filterConversations(list{}, conversations, state.filter_text, activeFolder),
           )
         : []
+
       ReactUpdate.Update({
         ...state,
         selected_conversations: selected_conversations->Belt.List.fromArray,
@@ -541,6 +590,11 @@ let make = (~immobilieId: int) => {
 
   let onTrash = (conversation, isTrash) => {
     updateTrashConversationMutation(. (conversation, isTrash))
+  }
+
+  let onMassTrash = () => {
+    let conversationIds = state.selected_conversations->Belt.List.toArray
+    trashAllMutation(. (immobilieId, conversationIds))
   }
 
   let onReplySend = (conversation, messageText, attachments) => {
@@ -569,7 +623,7 @@ let make = (~immobilieId: int) => {
           folder=activeFolder
           loading={conversationsQuery == Loading}
           currentConversation
-          conversations={filter_conversations(
+          conversations={filterConversations(
             state.interacted_with_conversations,
             conversations,
             state.filter_text,
@@ -583,20 +637,11 @@ let make = (~immobilieId: int) => {
           onRating
           onTrash
           onReadStatus
-          onToggle={conversation => send(ToggleConversation(conversation))}
-          onSelectAll={_conversation => send(SelectOrUnselectAllConversations(true))}
+          onToggleSelect={(conversation: ConversationData.conversation) =>
+            send(SelectOrUnselectConversation(conversation.id))}
+          onToggleSelectAll={selected => send(SelectOrUnselectAllConversations(selected))}
           onMassReply={_event => send(ShowRoute(MassReply))}
-          onMassTrash={_event => {
-            open Utils
-            send(
-              SetMassTrash(
-                array_filter(
-                  (c: conversation) => element_in_list(c.id, state.selected_conversations),
-                  state.conversations,
-                ),
-              ),
-            )
-          }}
+          onMassTrash
           isFiltered={String.length(state.filter_text) > 0}
           hasAnyConversations={Array.length(state.conversations) > 0}
         />
