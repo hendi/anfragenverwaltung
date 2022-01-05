@@ -1,6 +1,9 @@
 # Anfragenverwaltung
 
 ```
+# Copy over the default env variables
+cp .env.defaults .env.locals
+
 yarn
 
 # Runs rescript watcher (create new terminal tab for this)
