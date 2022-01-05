@@ -8,8 +8,9 @@
 
 # production
 /build
+/dist
 
-# bucklescript
+# ReScript
 /lib
 /types
 .merlin

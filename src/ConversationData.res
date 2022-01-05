@@ -1,10 +1,8 @@
 @val external process: 'a = "process"
 
-let apiBaseUrl = if process["env"]["NODE_ENV"] == "production" {
-  ""
-} else {
-  "http://localhost:8001"
-}
+@val external vite_api_url: string = "import.meta.env.VITE_API_URL"
+
+let apiBaseUrl = vite_api_url
 
 type rating =
   | Green
