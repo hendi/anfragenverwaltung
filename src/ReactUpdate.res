@@ -37,7 +37,7 @@ let useReducer = (reducer, initialState) => {
       }
     }
   , {state: initialState, sideEffects: ref([])})
-  React.useEffect1(() =>
+  React.useEffect3(() => {
     if Array.length(sideEffects.contents) > 0 {
       let sideEffectsToRun = Js.Array.sliceFrom(0, sideEffects.contents)
       sideEffects := []
@@ -48,6 +48,6 @@ let useReducer = (reducer, initialState) => {
     } else {
       None
     }
-  , [sideEffects])
+  }, (sideEffects, send, state))
   (state, send)
 }

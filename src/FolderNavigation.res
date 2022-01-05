@@ -11,7 +11,7 @@ type item = {
 let items = [
   {label: "Neu & Unbearbeitet", icon: "icon-bolt", folder: Folder.New},
   {label: "Unbeantwortet", icon: "icon-exclamation", folder: Folder.Unreplied},
-  {label: "Favoriten", icon: "icon-thumbs-up-alt", folder: Folder.ByRating(Green)},
+  {label: "Interessant", icon: "icon-thumbs-up-alt", folder: Folder.ByRating(Green)},
   {label: "Vielleicht", icon: "icon-unchecked", folder: Folder.ByRating(Yellow)},
   {label: "Uninteressant", icon: "icon-thumbs-down-alt", folder: Folder.ByRating(Red)},
   {label: "Nicht bewertet", icon: "icon-question", folder: Folder.ByRating(Unrated)},

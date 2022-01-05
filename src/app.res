@@ -270,7 +270,7 @@ module Hooks = {
   let useTrashAllMutation = client => {
     let (_, mutation) = Query.useMutation(
       ~onMutate=(params: (int, array<int>)) => {
-        let (_immobilieId, conversationIds) = params
+        let (_immobilieId, _conversationIds) = params
         let queryKey = #conversation
 
         client
@@ -394,7 +394,6 @@ type state = {
 
 type action =
   | ShowRoute(Route.t)
-  | SetConversationIgnore(conversation, bool)
   | SelectOrUnselectConversation(int)
   | SelectOrUnselectAllConversations(bool)
   | SendMassReply(array<conversation>, string, array<string>, string => int)
@@ -415,11 +414,6 @@ let make = (~immobilieId: int) => {
   let route = Route.fromUrlPath(url.path)
 
   let client = ReactQuery.Client.useQueryClient()
-
-  React.useEffect0(() => {
-    Route.toUrl(route)->RescriptReactRouter.replace
-    None
-  })
 
   let conversationsQuery = Query.useQuery(~resource=#conversation, ~params=(), _ => {
     ConversationData.fetchConversations(immobilieId)
@@ -463,18 +457,24 @@ let make = (~immobilieId: int) => {
   let trashAllMutation = Hooks.useTrashAllMutation(client)
   let ignoreConversationMutation = Hooks.useIgnoreConversationMutation(client)
 
-  let activeFolder = switch route {
-  | ConversationList(folder) => folder
-  | Conversation(id) =>
-    let found = conversations->Js.Array2.find(conv => {
-      conv.id == id
-    })
-    switch found {
-    | Some(conv) => ByRating(conv.rating)
-    | None => New
+  let (activeFolder, setActiveFolder) = React.useState(() => {
+    switch route {
+    | ConversationList(folder) => folder
+    | _ => New
     }
-  | _ => New
-  }
+  })
+
+  React.useEffect2(() => {
+    Js.log(route)
+    switch currentConversation {
+    | Some(currentConversation) =>
+      setActiveFolder(_prev => {
+        ByRating(currentConversation.rating)
+      })
+    | None => ()
+    }
+    None
+  }, (currentConversation, setActiveFolder))
 
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
@@ -494,6 +494,11 @@ let make = (~immobilieId: int) => {
         {...state, selected_conversations: selected_conversations},
         _self => {
           newRoute->Route.toUrl->RescriptReactRouter.push
+
+          switch newRoute {
+          | ConversationList(folder) => setActiveFolder(_ => folder)
+          | _ => ()
+          }
           None
         },
       )
@@ -548,7 +553,6 @@ let make = (~immobilieId: int) => {
         ...state,
         selected_conversations: selected_conversations->Belt.List.fromArray,
       })
-    | _ => ReactUpdate.NoUpdate
     }
   , initialState)
 
@@ -578,14 +582,6 @@ let make = (~immobilieId: int) => {
 
   <div>
     <ReactQueryDevtools position=#"bottom-right" />
-    <div className="debug">
-      {route->Route.toUrl->React.string}
-      {switch conversationsQuery {
-      | Loading => "loading conversations..."
-      | Success(convs) => "Loaded conversations: " ++ Belt.Array.length(convs)->Belt.Int.toString
-      | _ => ""
-      }->React.string}
-    </div>
     <div className="App">
       <FolderNavigation
         onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
@@ -621,10 +617,6 @@ let make = (~immobilieId: int) => {
         />
       </div>
       <div className="MessageListView">
-        {switch url.path {
-        | list{"conversation", id} => <div> {React.string("Conversation id " ++ id)} </div>
-        | _ => React.null
-        }}
         {switch route {
         | Unknown404 => <div> {React.string("404 not found")} </div>
         | Conversation(_id) =>
