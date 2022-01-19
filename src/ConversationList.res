@@ -1,4 +1,4 @@
-%%raw(`import './ConversationList.css'`)
+/*%%raw(`import './ConversationList.css'`)*/
 
 open Utils
 
@@ -62,7 +62,7 @@ let make = (
         onChange=onFilterTextChange
       />
     </div>
-    <div className="list scrollable">
+    <div className="list space-y-2 scrollable">
       {if loading {
         <p className="loadingState">
           {textEl(`Bitte warten, die Nachrichten werden geladen …`)}
@@ -84,8 +84,6 @@ let make = (
               }
             }}
             onRating
-            onTrash
-            onReadStatus
             onToggleSelect
           />
         })

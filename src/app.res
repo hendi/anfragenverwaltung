@@ -1,5 +1,3 @@
-%%raw(`import './app.css'`)
-
 @@warning("-3")
 
 open Belt.Option
@@ -465,7 +463,6 @@ let make = (~immobilieId: int) => {
   })
 
   React.useEffect2(() => {
-    Js.log(route)
     switch currentConversation {
     | Some(currentConversation) =>
       setActiveFolder(_prev => {
@@ -576,13 +573,12 @@ let make = (~immobilieId: int) => {
   }
 
   let onReplySend = (conversation, messageText, attachments) => {
-    Js.log3("onSendReply for ", conversation, messageText)
     postReplyMutation(. (conversation, messageText, attachments))
   }
 
   <div>
     <ReactQueryDevtools position=#"bottom-right" />
-    <div className="App">
+    <div className="flex">
       <FolderNavigation
         onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
         activeFolder

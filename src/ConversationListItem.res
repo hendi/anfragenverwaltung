@@ -1,4 +1,4 @@
-%%raw(`import './ConversationListItem.css'`)
+/* %%raw(`import './ConversationListItem.css'`) */
 
 open Utils
 
@@ -7,38 +7,44 @@ open ConversationData
 @react.component
 let make = (
   ~onClick: option<ReactEvent.Mouse.t => unit>=?,
-  ~onRating,
-  ~onTrash as _,
-  ~onReadStatus as _,
-  ~onToggleSelect: (conversation) => unit,
+  ~onRating: (ConversationData.conversation, ConversationData.rating, ReactEvent.Mouse.t) => unit,
+  ~onToggleSelect: conversation => unit,
   ~conversation: conversation,
-  ~selected,
-  ~active,
+  ~selected: bool,
+  ~active: bool,
 ) => {
+  let bgColor = if active {
+    "bg-blue-100"
+  } else {
+    switch conversation.rating {
+    | Green => "bg-green-100"
+    | Yellow => "bg-yellow-100"
+    | Red => "bg-red-100"
+    | Unrated => ""
+    }
+  }
+
   <div
-    className={list{
-      "ConversationListItem",
-      switch conversation.rating {
-      | Green => "rating-green"
-      | Yellow => "rating-yellow"
-      | Red => "rating-red"
-      | Unrated => "rating-unrated"
-      },
+    ?onClick
+    className={[
+      "cursor-pointer p-2",
+      bgColor,
       selected ? "selected" : "",
-      active ? "active" : "",
       conversation.is_in_trash ? "is_in_trash" : "",
       !conversation.is_read ? "unread" : "",
-    } |> String.concat(" ")}>
+    ]->Js.Array2.joinWith(" ")}>
     <div>
-      <div>
-        <div className="pull-left">
+      <div className="flex w-full justify-between">
+        <div className="">
           <input
             className="toggle"
             type_="checkbox"
             checked=selected
             onChange={_ => onToggleSelect(conversation)}
           />
-          <span className="name pointer" ?onClick> {textEl(conversation.name)} </span>
+          <span className="font-bold text-base pointer" ?onClick>
+            {textEl(conversation.name)}
+          </span>
         </div>
         <div className="pull-right">
           <ConversationRater conversation onRating />
@@ -64,17 +70,15 @@ let make = (
           }}
         </div>
       </div>
-      <div className="clearfix" />
       <div className="info">
-        <div className="date">
+        <div className="inline-block mt-1 text-xs">
           <IsoDate date={Js.Date.fromString(conversation.date_last_message)} />
-          <br />
-          {textEl("um ")}
+          {textEl(" um ")}
           <IsoTime date={Js.Date.fromString(conversation.date_last_message)} />
         </div>
       </div>
       <div>
-        <div className="pointer" ?onClick>
+        <div>
           {if conversation.latest_message.type_ == Outgoing {
             <em>
               {textEl("Ihre Antwort: ")}

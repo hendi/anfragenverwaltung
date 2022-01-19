@@ -8,9 +8,7 @@ switch ReactDOM.querySelector("#root") {
 | Some(root) =>
   let client = ReactQuery.Client.make()
   ReactDOM.render(
-    <ReactQuery.Client.Provider client>
-      <App immobilieId=177865 />
-    </ReactQuery.Client.Provider>,
+    <ReactQuery.Client.Provider client> <App immobilieId=177865 /> </ReactQuery.Client.Provider>,
     root,
   )
 | None => () // do nothing

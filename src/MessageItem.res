@@ -1,4 +1,4 @@
-%%raw(`import './MessageItem.css'`)
+/*%%raw(`import './MessageItem.css'`)*/
 
 open Utils
 

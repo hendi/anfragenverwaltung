@@ -1,4 +1,4 @@
-%%raw(`import './FolderNavigationItem.css'`)
+/* %%raw(`import './FolderNavigationItem.css'`) */
 
 open Utils
 
@@ -16,13 +16,15 @@ let make = (
   let all_counter = counter(folder)->Js.Array2.length
  */
 
-  <div
-    className={"FolderNavigationItem" ++
-    (" " ++
-    ((isActive ? "active" : "") ++ (" " ++ (unreadCount > 0 ? "unread" : ""))))}
+  <button
+    className={"flex justify-between py-2 px-4 items-center w-full " ++
+    ((isActive ? "bg-blue-400 text-white" : "") ++
+    (" " ++ (unreadCount > 0 ? "unread" : "")))}
     onClick>
-    <i className={"main-icon " ++ icon} />
-    {textEl(label)}
-    <span className="pull-right"> {` (${count->Belt.Int.toString})`->React.string} </span>
-  </div>
+    <span className="space-x-2">
+      <span className="inline-block w-4"> <i className={"main-icon " ++ icon} /> </span>
+      <span> {textEl(label)} </span>
+    </span>
+    <span className="pl-2"> {` (${count->Belt.Int.toString})`->React.string} </span>
+  </button>
 }

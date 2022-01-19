@@ -1,4 +1,4 @@
-%%raw(`import './FolderNavigation.css'`)
+/*%%raw(`import './FolderNavigation.css'`)*/
 
 open ConversationData
 
@@ -53,7 +53,7 @@ let make = (
   ~onFolderClick: Folder.t => unit,
   ~conversations: array<ConversationData.conversation>,
 ) => {
-  <div className="FolderNavigation">
+  <div>
     {Belt.Array.map(items, ({label, icon, folder}) => {
       let onClick = evt => {
         ReactEvent.Mouse.preventDefault(evt)
