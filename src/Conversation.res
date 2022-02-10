@@ -1,4 +1,4 @@
-/*%%raw(`import './Conversation.css'`)*/
+/* %%raw(`import './Conversation.css'`) */
 
 open Utils
 
@@ -21,18 +21,8 @@ module TrashButton = {
     </button>
   }
 }
-module Reply = {
-  type t = {
-    conversation: conversation,
-    messageText: string,
-    attachments: array<string>,
-  }
-}
 
 type action =
-  | LoadingMessages
-  | LoadedMessages(array<message>)
-  | ReplySent(message)
   | ToggleNotes
   | NotesChanged(string)
 
@@ -64,41 +54,23 @@ let make = (
 
   let scrollUp = () =>
     switch scrollableRef.current->Js.Nullable.toOption {
-    | Some(domNode) => scrollElementToTop(domNode)->ignore
+    | Some(domNode) =>
+      scrollElementToTop(domNode)->ignore
     | None => ()
     }
 
   //TODO: Scroll to top when a reply has been sent
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
-    | ReplySent(_reply) =>
-      ReactUpdate.UpdateWithSideEffects(
-        state,
-        /* TODO
-             {
-               ...state,
-               messages: Array.make(1, reply) |> Array.append(state.messages),
-             },*/
-        _self => {
-          switch scrollableRef.current->Js.Nullable.toOption {
-          | Some(domNode) => scrollElementToTop(domNode)->ignore
-          | None => ()
-          }
-          None
-        },
-      )
     | ToggleNotes => ReactUpdate.Update({...state, show_notes: !state.show_notes})
     | NotesChanged(notes) => ReactUpdate.Update({...state, notes: notes})
-    | LoadedMessages(_)
-    | LoadingMessages =>
-      ReactUpdate.NoUpdate
     }
   , initialState)
-
 
   <div
     className={list{
       "Conversation",
+      "flex flex-col h-full",
       switch conversation.rating {
       | Green => "rating-green"
       | Yellow => "rating-yellow"
@@ -177,16 +149,19 @@ let make = (
         }}
       </div>
     </div>
-    <div className="main scrollable" ref={ReactDOM.Ref.domRef(scrollableRef)}>
-      <div>
+    // main area
+    <div
+      className="overflow-y-auto"
+      ref={ReactDOM.Ref.domRef(scrollableRef)}>
+      <div className="space-y-3 mb-12">
         {if loading {
           <p> {textEl("Nachrichten werden geladen...")} </p>
         } else {
           messages
-          |> Array.map((message: message) =>
+          ->Js.Array2.map((message: message) =>
             <MessageItem key={string_of_int(message.id)} message />
           )
-          |> arrayEl
+          ->React.array
         }}
       </div>
       {if !conversation.is_in_trash {

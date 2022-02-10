@@ -1,4 +1,6 @@
 %%raw(`import './index.css'`)
+%%raw(`import 'filepond/dist/filepond.min.css'`)
+%%raw(`import 'filepond-polyfill/dist/filepond-polyfill.min.js'`)
 
 /*
  [@bs.module "./registerServiceWorker"]

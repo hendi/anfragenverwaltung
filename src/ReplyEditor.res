@@ -1,4 +1,4 @@
-/*%%raw(`import './ReplyEditor.css'`)*/
+/* %%raw(`import './ReplyEditor.css'`) */
 
 open Utils
 
@@ -10,6 +10,7 @@ type state = {
 
 type action =
   | MessageTextChanged(string)
+  | SendReply
   | UploadStarted
   | UploadFinished
 
@@ -27,20 +28,39 @@ let make = (
 
   let filepondRef = React.useRef(None)
 
-  let (state, send) = React.useReducer((state, action) => {
+  let (state, send) = ReactUpdate.useReducer((state, action) => {
     switch action {
-    | UploadStarted => {
+    | SendReply =>
+      ReactUpdate.UpdateWithSideEffects(
+        {...state, message_text: ""},
+        self => {
+          let attachments = switch filepondRef.current {
+          | Some(filepond) => {
+              let files = filepond->Filepond.Instance.getFiles
+              files->Belt.Array.map(f => f.serverId)
+            }
+          | None => []
+          }
+          
+          onReplySend(conversation, self.state.message_text, attachments)
+          None
+        },
+      )
+    | UploadStarted =>
+      ReactUpdate.Update({
         ...state,
         uploads_in_progress: state.uploads_in_progress + 1,
-      }
-    | UploadFinished => {
+      })
+    | UploadFinished =>
+      ReactUpdate.Update({
         ...state,
         uploads_in_progress: state.uploads_in_progress - 1,
-      }
-    | MessageTextChanged(text) => {
+      })
+    | MessageTextChanged(text) =>
+      ReactUpdate.Update({
         ...state,
         message_text: text,
-      }
+      })
     }
   }, initialState)
 
@@ -100,15 +120,7 @@ let make = (
         disabled={String.length(state.message_text) == 0}
         /* || state.uploads_in_progress != 0 */
         onClick={evt => {
-          let attachments = switch filepondRef.current {
-          | Some(filepond) => {
-              let files = filepond->Filepond.Instance.getFiles
-              files->Belt.Array.map(f => f.serverId)
-            }
-          | None => []
-          }
-
-          onReplySend(conversation, state.message_text, attachments)
+          send(SendReply)
         }}>
         {textEl("Antwort senden")}
       </button>
