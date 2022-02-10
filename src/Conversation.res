@@ -1,4 +1,4 @@
-%%raw(`import './Conversation.css'`)
+/* %%raw(`import './Conversation.css'`) */
 
 open Utils
 
@@ -9,14 +9,22 @@ type state = {
   notes: string,
 }
 
+module TrashButton = {
+  @react.component
+  let make = (~onClick, ~isInTrash: bool) => {
+    <button className="ConversationTrasher" onClick>
+      {if isInTrash {
+        <span className="btn"> <i className="icon-undo" /> {textEl("Wiederherstellen")} </span>
+      } else {
+        <span className="btn"> <i className="icon-trash" /> {textEl(`Löschen`)} </span>
+      }}
+    </button>
+  }
+}
+
 type action =
-  | LoadingMessages
-  | LoadedMessages(array<message>)
-  | ReplySent(message)
-  | IgnoreConversation
   | ToggleNotes
   | NotesChanged(string)
-  | SaveNotes
 
 let scrollElementToTop: Dom.element => int = %raw(`
 function (domNode) {
@@ -28,13 +36,13 @@ function (domNode) {
 @react.component
 let make = (
   ~conversation: conversation,
-  ~onReplySent,
+  ~onReplySend: (conversation, string, array<string>) => unit,
   ~onRating,
   ~onTrash,
-  ~onReadStatus,
-  ~onIgnore,
+  ~onReadStatus: (conversation, bool) => unit,
+  ~onIgnore: unit => unit,
   ~onSaveNotes,
-  ~onBack,
+  ~onBack as _,
   ~messages: array<message>,
   ~loading: bool,
 ) => {
@@ -44,56 +52,30 @@ let make = (
     notes: conversation.notes,
   }
 
+  let scrollUp = () =>
+    switch scrollableRef.current->Js.Nullable.toOption {
+    | Some(domNode) =>
+      scrollElementToTop(domNode)->ignore
+    | None => ()
+    }
+
+  //TODO: Scroll to top when a reply has been sent
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
-    | ReplySent(reply) =>
-      ReactUpdate.UpdateWithSideEffects(
-        state,
-        /* TODO
-             {
-               ...state,
-               messages: Array.make(1, reply) |> Array.append(state.messages),
-             },*/
-        _self => {
-          switch scrollableRef.current->Js.Nullable.toOption {
-          | Some(domNode) => Some(() => scrollElementToTop(domNode)->ignore)
-          | None => None
-          }
-        },
-      )
-    | IgnoreConversation => ReactUpdate.NoUpdate
     | ToggleNotes => ReactUpdate.Update({...state, show_notes: !state.show_notes})
     | NotesChanged(notes) => ReactUpdate.Update({...state, notes: notes})
-    | SaveNotes =>
-      ReactUpdate.UpdateWithSideEffects(
-        state,
-        _self => Some(() => onSaveNotes(conversation, state.notes)),
-      )
-    | LoadedMessages(_)
-    | LoadingMessages =>
-      ReactUpdate.NoUpdate
     }
   , initialState)
-
-  let sendReply = (conversation: conversation, message_text, attachments) =>
-    postReply(conversation, message_text, attachments, reply => {
-      send(ReplySent(reply))
-      onReplySent(reply)
-    })
-
-  let ignoreConversation = (conversation: conversation) => {
-    send(IgnoreConversation)
-    onIgnore(conversation)
-  }
 
   <div
     className={list{
       "Conversation",
+      "flex flex-col h-full",
       switch conversation.rating {
-      | Some(Green) => "rating-green"
-      | Some(Yellow) => "rating-yellow"
-      | Some(Red) => "rating-red"
-      | _ => "rating-unrated"
+      | Green => "rating-green"
+      | Yellow => "rating-yellow"
+      | Red => "rating-red"
+      | Unrated => "rating-unrated"
       },
       conversation.is_in_trash ? "is_in_trash" : "",
     } |> String.concat(" ")}>
@@ -101,7 +83,12 @@ let make = (
       <div className="pull-right" style={ReactDOM.Style.make(~paddingTop="2px", ())}>
         <ConversationPrinter conversation />
         <ConversationReadStatus conversation onReadStatus />
-        <ConversationTrasher conversation onTrash />
+        <TrashButton
+          isInTrash={conversation.is_in_trash}
+          onClick={_evt => {
+            onTrash(conversation, !conversation.is_in_trash)
+          }}
+        />
         <ConversationRater conversation onRating />
       </div>
       <h2> {textEl(conversation.name)} </h2>
@@ -149,7 +136,7 @@ let make = (
             {if state.notes != conversation.notes {
               <button
                 className="btn btn-primary"
-                onClick={_event => send(SaveNotes)}
+                onClick={_event => onSaveNotes(conversation, state.notes)}
                 disabled={state.notes == conversation.notes}>
                 {textEl("Notizen speichern")}
               </button>
@@ -162,24 +149,30 @@ let make = (
         }}
       </div>
     </div>
-    <div className="main scrollable" ref={ReactDOM.Ref.domRef(scrollableRef)}>
-      <div>
+    // main area
+    <div
+      className="overflow-y-auto"
+      ref={ReactDOM.Ref.domRef(scrollableRef)}>
+      <div className="space-y-3 mb-12">
         {if loading {
           <p> {textEl("Nachrichten werden geladen...")} </p>
         } else {
           messages
-          |> Array.map((message: message) =>
+          ->Js.Array2.map((message: message) =>
             <MessageItem key={string_of_int(message.id)} message />
           )
-          |> arrayEl
+          ->React.array
         }}
       </div>
       {if !conversation.is_in_trash {
         <ReplyEditor
           key={Belt.Int.toString(conversation.id)}
           conversation
-          onReplySent={sendReply}
-          onIgnoreConversation={_event => ignoreConversation(conversation)}
+          onReplySend={(conversation, msg, attachments) => {
+            onReplySend(conversation, msg, attachments)
+            scrollUp()
+          }}
+          onIgnoreConversation={_event => onIgnore()}
         />
       } else {
         React.null

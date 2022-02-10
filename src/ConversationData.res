@@ -1,23 +1,24 @@
-let isProd = true
+@val external process: 'a = "process"
 
-let apiBaseUrl = if isProd {
-  ""
-} else {
-  "http://localhost:8000"
-}
+@val external vite_api_url: string = "import.meta.env.VITE_API_URL"
+
+let apiBaseUrl = vite_api_url
 
 type rating =
   | Green
   | Yellow
   | Red
+  | Unrated
 
-type folder =
-  | All
-  | New
-  | ByRating(option<rating>)
-  | Unreplied
-  | Replied
-  | Trash
+module Folder = {
+  type t =
+    | All
+    | New
+    | ByRating(rating)
+    | Unreplied
+    | Replied
+    | Trash
+}
 
 type type_ =
   | Incoming
@@ -37,7 +38,7 @@ type rec conversation = {
   date_last_message: string,
   count_messages: int,
   latest_message: message,
-  rating: option<rating>,
+  rating: rating,
   has_attachments: bool,
   notes: string,
   is_read: bool,
@@ -81,10 +82,10 @@ module Decode = {
       |> (
         rating =>
           switch rating {
-          | Some("green") => Some(Green)
-          | Some("yellow") => Some(Yellow)
-          | Some("red") => Some(Red)
-          | _ => None
+          | Some("green") => Green
+          | Some("yellow") => Yellow
+          | Some("red") => Red
+          | _ => Unrated
           }
       ),
       has_attachments: json |> field("has_attachments", bool),
@@ -130,48 +131,28 @@ module Decode = {
   and many_attachments = (json): array<attachment> => json |> Json.Decode.array(single_attachment)
 }
 
-let fetchConversations = (immobilie_id, callback) => {
-  open Js.Promise
+let fetchConversations = (immobilie_id): Js.Promise.t<array<conversation>> => {
+  open Promise2
   Fetch.fetchWithInit(
     apiBaseUrl ++ ("/anfragen/immobilie/" ++ (string_of_int(immobilie_id) ++ "/conversations")),
     Fetch.RequestInit.make(~credentials=Include, ()),
   )
-  |> then_(Fetch.Response.json)
-  |> then_(json =>
-    json
-    |> Decode.many_conversations
-    |> (
-      conversations => {
-        callback(conversations)
-        resolve()
-      }
-    )
-  )
-  |> ignore
+  ->then(Fetch.Response.json)
+  ->then(json => json->Decode.many_conversations->resolve)
 }
 
-let fetchConversationMessages = (conversation: conversation, callback) => {
-  open Js.Promise
+let fetchMessages = (~conversationId: int, ~immobilieId: int): Js.Promise.t<array<message>> => {
+  open Promise2
   Fetch.fetchWithInit(
     apiBaseUrl ++
     ("/anfragen/immobilie/" ++
-    (string_of_int(conversation.immobilie_id) ++
+    (Belt.Int.toString(immobilieId) ++
     ("/conversations/" ++
-    (string_of_int(conversation.id) ++ "/messages")))),
+    (Belt.Int.toString(conversationId) ++ "/messages")))),
     Fetch.RequestInit.make(~credentials=Include, ()),
   )
-  |> then_(Fetch.Response.json)
-  |> then_(json =>
-    json
-    |> Decode.many_messages
-    |> (
-      messages => {
-        callback(messages)
-        resolve()
-      }
-    )
-  )
-  |> ignore
+  ->then(Fetch.Response.json)
+  ->then(json => json->Decode.many_messages->resolve)
 }
 
 /*
@@ -223,22 +204,18 @@ let fetchConversationMessages = (conversation: conversation, callback) => {
      |> ignore
    );
  */
-let postReply = (
-  conversation: conversation,
-  message_text: string,
-  attachments: array<string>,
-  callback,
-) => {
+let postReply = (conversation: conversation, msg: string, attachments: array<string>): Js.Promise.t<
+  message,
+> => {
   let dict = Js.Dict.empty()
-  Js.Dict.set(dict, "message", Js.Json.string(message_text))
+  Js.Dict.set(dict, "message", Js.Json.string(msg))
   Js.Dict.set(dict, "attachments", Js.Json.stringArray(attachments))
-  open Js.Promise
   Fetch.fetchWithInit(
     apiBaseUrl ++
     ("/anfragen/immobilie/" ++
-    (string_of_int(conversation.immobilie_id) ++
+    (Belt.Int.toString(conversation.immobilie_id) ++
     ("/conversations/" ++
-    (string_of_int(conversation.id) ++ "/reply")))),
+    (Belt.Int.toString(conversation.id) ++ "/reply")))),
     Fetch.RequestInit.make(
       ~credentials=Include,
       ~method_=Post,
@@ -246,18 +223,8 @@ let postReply = (
       (),
     ),
   )
-  |> then_(Fetch.Response.json)
-  |> then_(json =>
-    json
-    |> Decode.single_message
-    |> (
-      message => {
-        callback(message)
-        resolve()
-      }
-    )
-  )
-  |> ignore
+  ->Promise2.then(Fetch.Response.json)
+  ->Promise2.thenResolve(json => json->Decode.single_message)
 }
 
 let postMassReply = (
@@ -293,34 +260,29 @@ let postMassReply = (
   |> ignore
 }
 
-let postMassTrash = (immobilie_id, conversations: array<conversation>) => {
-  let json = {
+let postMassTrash = (immobilie_id, conversationIds: array<int>): Js.Promise.t<Js.Json.t> => {
+  let jsonStr = {
     open Json.Encode
-    object_(list{("conversation_ids", array(int, Array.map(c => c.id, conversations)))})
-  } |> Js.Json.stringify
-  open Js.Promise
+    object_(list{("conversation_ids", array(int, conversationIds))})->Js.Json.stringify
+  }
   Fetch.fetchWithInit(
     apiBaseUrl ++ ("/anfragen/immobilie/" ++ (string_of_int(immobilie_id) ++ "/masstrash")),
     Fetch.RequestInit.make(
       ~credentials=Include,
       ~method_=Post,
-      ~body=Fetch.BodyInit.make(json),
+      ~body=Fetch.BodyInit.make(jsonStr),
       (),
     ),
-  )
-  |> then_(Fetch.Response.json)
-  |> then_(_json => resolve())
-  |> ignore
+  )->Promise2.then(Fetch.Response.json)
 }
 
-let changeConversation = (conversation: conversation, data, callback) => {
-  open Js.Promise
+let updateConversation = (~id: int, ~immobilieId: int, data: Js.Dict.t<Js.Json.t>): Js.Promise.t<
+  conversation,
+> => {
   Fetch.fetchWithInit(
     apiBaseUrl ++
     ("/anfragen/immobilie/" ++
-    (string_of_int(conversation.immobilie_id) ++
-    ("/conversations/" ++
-    string_of_int(conversation.id)))),
+    (Belt.Int.toString(immobilieId) ++ ("/conversations/" ++ Belt.Int.toString(id)))),
     Fetch.RequestInit.make(
       ~credentials=Include,
       ~method_=Post,
@@ -328,55 +290,45 @@ let changeConversation = (conversation: conversation, data, callback) => {
       (),
     ),
   )
-  |> then_(Fetch.Response.json)
-  |> then_(json =>
-    json
-    |> Decode.single_conversation
-    |> (
-      conversation => {
-        callback(conversation)
-        resolve()
-      }
-    )
-  )
-  |> ignore
+  ->Promise2.then(Fetch.Response.json)
+  ->Promise2.thenResolve(json => json->Decode.single_conversation)
 }
 
-let rateConversation = (conversation: conversation, rating: option<rating>, callback) => {
+let rateConversation = (conversation: conversation, rating: rating) => {
   let data = Js.Dict.empty()
   Js.Dict.set(
     data,
     "rating",
     switch rating {
-    | Some(Green) => Js.Json.string("green")
-    | Some(Yellow) => Js.Json.string("yellow")
-    | Some(Red) => Js.Json.string("red")
-    | None => Js.Json.string("")
+    | Green => Js.Json.string("green")
+    | Yellow => Js.Json.string("yellow")
+    | Red => Js.Json.string("red")
+    | Unrated => Js.Json.string("")
     },
   )
-  changeConversation(conversation, data, callback)
+  updateConversation(~id=conversation.id, ~immobilieId=conversation.immobilie_id, data)
 }
 
-let setReadStatusForConversation = (conversation: conversation, is_read: bool, callback) => {
+let setReadStatusForConversation = (conversation: conversation, is_read: bool) => {
   let data = Js.Dict.empty()
   Js.Dict.set(data, "is_read", Js.Json.boolean(is_read))
-  changeConversation(conversation, data, callback)
+  updateConversation(~id=conversation.id, ~immobilieId=conversation.immobilie_id, data)
 }
 
-let storeNotesForConversation = (conversation: conversation, notes: string, callback) => {
+let storeNotesForConversation = (conversation: conversation, notes: string) => {
   let data = Js.Dict.empty()
   Js.Dict.set(data, "notes", Js.Json.string(notes))
-  changeConversation(conversation, data, callback)
+  updateConversation(~id=conversation.id, ~immobilieId=conversation.immobilie_id, data)
 }
 
-let trashConversation = (conversation: conversation, is_in_trash: bool, callback) => {
+let updateTrashConversation = (conversation: conversation, is_in_trash: bool) => {
   let data = Js.Dict.empty()
   Js.Dict.set(data, is_in_trash ? "trash" : "untrash", Js.Json.string("x"))
-  changeConversation(conversation, data, callback)
+  updateConversation(~id=conversation.id, ~immobilieId=conversation.immobilie_id, data)
 }
 
-let ignoreConversation = (conversation: conversation, is_ignored: bool, callback) => {
+let ignoreConversation = (~id: int, ~immobilieId: int, isIgnored: bool) => {
   let data = Js.Dict.empty()
-  Js.Dict.set(data, is_ignored ? "ignore" : "unignore", Js.Json.string("x"))
-  changeConversation(conversation, data, callback)
+  Js.Dict.set(data, isIgnored ? "ignore" : "unignore", Js.Json.string("x"))
+  updateConversation(~id, ~immobilieId, data)
 }

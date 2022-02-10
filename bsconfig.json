@@ -17,8 +17,7 @@
     "@rescript/react",
     "bs-jest",
     "bs-fetch",
-    "@glennsl/bs-json",
-    "bs-moment"
+    "@glennsl/bs-json"
   ],
   "reason": {
     "react-jsx": 3

@@ -1,11 +1,18 @@
 %%raw(`import './index.css'`)
+%%raw(`import 'filepond/dist/filepond.min.css'`)
+%%raw(`import 'filepond-polyfill/dist/filepond-polyfill.min.js'`)
 
 /*
  [@bs.module "./registerServiceWorker"]
  external register_service_worker : unit => unit = "default";
  */
 switch ReactDOM.querySelector("#root") {
-| Some(root) => ReactDOM.render(<App.App immobilie_id=177865 />, root)
+| Some(root) =>
+  let client = ReactQuery.Client.make()
+  ReactDOM.render(
+    <ReactQuery.Client.Provider client> <App immobilieId=177865 /> </ReactQuery.Client.Provider>,
+    root,
+  )
 | None => () // do nothing
 }
 /* register_service_worker(); */
