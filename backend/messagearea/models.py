@@ -35,6 +35,7 @@ class Conversation(models.Model):
     has_been_replied_to = models.BooleanField(default=False)
     has_attachments = models.BooleanField(default=False)
     count_messages = models.IntegerField()
+    date_last_change = models.DateTimeField(auto_now=True)
 
     @property
     def _latest(self):
@@ -48,7 +49,7 @@ class Conversation(models.Model):
     def latest_message(self):
         return self._latest
 
-    def to_json(self, include_messages=False):
+    def to_json(self, include_messages=False, since=None):
         data = {
             "id": self.id,
             "immobilie_id": self.immobilie_id,
@@ -104,6 +105,9 @@ class Conversation(models.Model):
                 key=lambda k: (k["date"] or timezone.now())
             )
 
+            if since:
+                data["messages"] = [x for x in data["messages"] if x["date"] is None or x["date"] > since]
+
         return data
 
 
@@ -132,11 +136,11 @@ class IncomingMessage(Message):
     def save(self, *args, **kwargs):
         if self.is_read is False and self.conversation.is_read is not False:
             self.conversation.is_read = False
-            self.conversation.save(update_fields=["is_read"])
+            self.conversation.save(update_fields=["is_read", "date_last_change"])
 
         if self.is_replied_to is False and self.conversation.is_replied_to is not False:
             self.conversation.is_replied_to = False
-            self.conversation.save(update_fields=["is_replied_to"])
+            self.conversation.save(update_fields=["is_replied_to", "date_last_change"])
 
         return super().save(*args, **kwargs)
 
@@ -147,6 +151,6 @@ class OutgoingMessage(Message):
     def save(self, *args, **kwargs):
         if self.conversation.has_been_replied_to is not True:
             self.conversation.has_been_replied_to = True
-            self.conversation.save(update_fields=["has_been_replied_to"])
+            self.conversation.save(update_fields=["has_been_replied_to", "date_last_change"])
 
         return super().save(*args, **kwargs)
