@@ -82,9 +82,9 @@ class ImmobilieListView(AuthenticatedApiView):
                 "zipcode": 51503,
                 "city": "Rösrath",
                 "image": "https://cdn.pixabay.com/photo/2017/04/10/22/28/residence-2219972__340.jpg",
-                "is_archived": True,
-                "delete_messages": True,
-                "new_messages": None,
+                "is_archived": False,
+                "delete_messages": False,
+                "new_messages": qs_for_folder(Conversation.objects.filter(immobilie_id=123456), "New").count(),
             },
             {
                 "id": 177865,
@@ -95,7 +95,17 @@ class ImmobilieListView(AuthenticatedApiView):
                 "is_archived": False,
                 "delete_messages": False,
                 "new_messages": qs_for_folder(Conversation.objects.filter(immobilie_id=177865), "New").count(),
-            }
+            },
+            {
+                "id": 1,
+                "title": "Altes Objekt in der Speicherstadt, das mittlerweile verkauft wurde und die Anzeige nicht mehr einsehbar ist",
+                "zipcode": 22417,
+                "city": "Hamburg",
+                "image": "https://cdn.pixabay.com/photo/2018/01/09/12/20/hamburg-3071437__480.jpg",
+                "is_archived": True,
+                "delete_messages": True,
+                "new_messages": None,
+            },            
         ])
 
 
