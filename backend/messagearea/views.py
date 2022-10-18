@@ -58,7 +58,7 @@ def reply_to_conversation(immobilie_id, conversation_id, message_text, attachmen
         "date": message.date_sent,
         "attachments": [{
             "filename": att.filename,
-            "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachment/%d" % (immobilie_id, att.id),
+            "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachments/%d" % (immobilie_id, att.id),
         } for att in message.attachment_set.all()],
     }
 

@@ -91,7 +91,7 @@ class Conversation(models.Model):
                 "date": str(self._latest.date_sent),
                 "attachments": [{
                     "filename": att.filename,
-                    "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachment/%d" % (self.immobilie_id, att.id),
+                    "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachments/%d" % (self.immobilie_id, att.id),
                 } for att in self._latest.attachment_set.all()],
             },
         }
@@ -107,7 +107,7 @@ class Conversation(models.Model):
                         "date": x.date_sent,
                         "attachments": [{
                             "filename": att.filename,
-                            "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachment/%d" % (self.immobilie_id, att.id),
+                            "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachments/%d" % (self.immobilie_id, att.id),
                         } for att in x.attachment_set.all()],
                     } for x in self.message_set.filter(Q(
                         Q(incomingmessage__isnull=False)
