@@ -15,10 +15,10 @@ from django.contrib import messages
 
 from braces.views import JSONResponseMixin, CsrfExemptMixin
 
-from .models import Conversation, Message, IncomingMessage, OutgoingMessage
+from .models import Conversation, Message, IncomingMessage, OutgoingMessage, Attachment
 
 
-def reply_to_conversation(immobilie_id, conversation_id, message_text):
+def reply_to_conversation(immobilie_id, conversation_id, message_text, attachment_ids=None):
     conversation = get_object_or_404(Conversation,
                                      id=conversation_id,
                                      immobilie_id=immobilie_id)
@@ -31,6 +31,13 @@ def reply_to_conversation(immobilie_id, conversation_id, message_text):
         to_email=conversation.sender_email,
     )
 
+    if attachment_ids:
+        for attachment_id in attachment_ids:
+            attachment = Attachment.objects.get(id=attachment_id, immobilie_id=immobilie_id)
+            message.attachment_set.add(attachment)
+
+        message.save()
+
     # mark all previous IncomingMessages as read and replied-to
     IncomingMessage.objects.filter(
         conversation=conversation,
@@ -41,7 +48,7 @@ def reply_to_conversation(immobilie_id, conversation_id, message_text):
     # also mark conversation
     conversation.is_replied_to = True
     conversation.is_read = True
-    conversation.save(update_fields=["is_replied_to", "is_read"])
+    conversation.save(update_fields=["is_replied_to", "is_read", "date_last_change"])
 
     return {
         "conversation_id": conversation.id,
@@ -49,11 +56,14 @@ def reply_to_conversation(immobilie_id, conversation_id, message_text):
         "type": "outgoing",
         "content": message.message,
         "date": message.date_sent,
-        "attachments": [],
+        "attachments": [{
+            "filename": att.filename,
+            "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachment/%d" % (immobilie_id, att.id),
+        } for att in message.attachment_set.all()],
     }
 
 
-def reply_to_conversations(immobilie_id, conversation_ids, message_text):
+def reply_to_conversations(immobilie_id, conversation_ids, message_text, attachment_ids=None):
     conversations = Conversation.objects.filter(id__in=conversation_ids,
                                                 immobilie_id=immobilie_id)
 
@@ -66,6 +76,14 @@ def reply_to_conversations(immobilie_id, conversation_ids, message_text):
             to_email=conversation.sender_email,
         )
 
+        if attachment_ids:
+            for attachment_id in attachment_ids:
+                attachment = Attachment.objects.get(id=attachment_id, immobilie_id=immobilie_id)
+                message.attachment_set.add(attachment)
+
+            message.save()
+
+
     # mark all previous IncomingMessages as read and replied-to
     IncomingMessage.objects.filter(
         conversation__in=conversations,
@@ -74,7 +92,7 @@ def reply_to_conversations(immobilie_id, conversation_ids, message_text):
     ).update(is_replied_to=True, is_read=True)
 
     # also mark conversations
-    conversations.update(is_replied_to=True, is_read=True)
+    conversations.update(is_replied_to=True, is_read=True, date_last_change=timezone.now())
 
 
 class ConversationListForImmobilie(View, JSONResponseMixin):
@@ -94,7 +112,7 @@ class MessageListForConversation(View, JSONResponseMixin):
 
         # same for Conversation
         conversation.is_read = True
-        conversation.save(update_fields=["is_read"])
+        conversation.save(update_fields=["is_read", "date_last_change"])
 
         messages = [
             {
@@ -135,7 +153,7 @@ class MassTrash(CsrfExemptMixin, View, JSONResponseMixin):
         data = json.loads(request.body.decode("utf-8"))
 
         conversations = Conversation.objects.filter(id__in=data.get("conversation_ids", []), immobilie_id=immo_id)
-        conversations.update(is_in_trash=True, is_read=True)
+        conversations.update(is_in_trash=True, is_read=True, date_last_change=timezone.now())
 
         return self.render_json_response({"status": "ok"})
 
@@ -150,18 +168,18 @@ class ChangeConversation(CsrfExemptMixin, View, JSONResponseMixin):
             IncomingMessage.objects.filter(conversation=conversation).update(is_read=True)
             conversation.is_read = True
             conversation.rating = data["rating"]
-            conversation.save(update_fields=["is_read", "rating"])
+            conversation.save(update_fields=["is_read", "rating", "date_last_change"])
 
         if data.get("trash"):
             conversation.is_in_trash = True
             conversation.is_read = True
-            conversation.save(update_fields=["is_in_trash", "is_read"])
+            conversation.save(update_fields=["is_in_trash", "is_read", "date_last_change"])
             IncomingMessage.objects.filter(conversation=conversation).update(is_read=True)
 
         if data.get("untrash"):
             conversation.is_in_trash = False
             conversation.is_read = False
-            conversation.save(update_fields=["is_in_trash", "is_read"])
+            conversation.save(update_fields=["is_in_trash", "is_read", "date_last_change"])
 
             # to mark untrash-ed message as "unread"
             latest_incoming = IncomingMessage.objects.filter(conversation=conversation).latest()
@@ -171,7 +189,7 @@ class ChangeConversation(CsrfExemptMixin, View, JSONResponseMixin):
         if data.get("junk"):
             conversation.is_junk = True
             conversation.is_read = True
-            conversation.save(update_fields=["is_junk", "is_read"])
+            conversation.save(update_fields=["is_junk", "is_read", "date_last_change"])
 
             # mark message as read
             IncomingMessage.objects.filter(conversation=conversation).update(is_read=True)
@@ -179,7 +197,7 @@ class ChangeConversation(CsrfExemptMixin, View, JSONResponseMixin):
         if data.get("unjunk"):
             conversation.is_junk = False
             conversation.is_read = False
-            conversation.save(update_fields=["is_junk", "is_read"])
+            conversation.save(update_fields=["is_junk", "is_read", "date_last_change"])
 
             # to mark unjunk-ed message as "unread"
             latest_incoming = IncomingMessage.objects.filter(conversation=conversation).latest()
@@ -188,19 +206,19 @@ class ChangeConversation(CsrfExemptMixin, View, JSONResponseMixin):
 
         if data.get("ignore"):
             conversation.is_ignored = True
-            conversation.save(update_fields=["is_ignored"])
+            conversation.save(update_fields=["is_ignored", "date_last_change"])
 
         if data.get("unignore"):
             conversation.is_ignored = False
-            conversation.save(update_fields=["is_ignored"])
+            conversation.save(update_fields=["is_ignored", "date_last_change"])
 
         if "is_read" in data:
             conversation.is_read = bool(data.get("is_read"))
-            conversation.save(update_fields=["is_read"])
+            conversation.save(update_fields=["is_read", "date_last_change"])
 
         if "notes" in data:
             conversation.notes = data["notes"].strip()
-            conversation.save(update_fields=["notes"])
+            conversation.save(update_fields=["notes", "date_last_change"])
 
 
         return self.render_json_response(conversation.to_json())

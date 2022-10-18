@@ -1,6 +1,9 @@
 import re
 import json
 import time
+import base64
+import binascii
+import magic
 from datetime import datetime
 
 from django.template.loader import render_to_string
@@ -19,7 +22,7 @@ from django.utils.decorators import method_decorator
 
 from braces.views import JSONResponseMixin, JsonRequestResponseMixin, CsrfExemptMixin
 
-from .models import Conversation, Message, IncomingMessage, OutgoingMessage
+from .models import Conversation, Message, IncomingMessage, OutgoingMessage, Attachment
 from .views import qs_for_folder, reply_to_conversation, reply_to_conversations
 
 
@@ -105,7 +108,7 @@ class ImmobilieListView(AuthenticatedApiView):
                 "is_archived": True,
                 "delete_messages": True,
                 "new_messages": None,
-            },            
+            },
         ])
 
 
@@ -174,10 +177,11 @@ class ReplyToConversation(AuthenticatedApiView):
                 "errors": ["missing message"],
             }, status=400)
 
+        attachments = self.request_json.get("attachment_ids", [])
         message_text = self.request_json["message"].replace("\x00", "")
 
         return self.render_json_response(
-            reply_to_conversation(immo_id, conversation_id, message_text)
+            reply_to_conversation(immo_id, conversation_id, message_text, attachments)
         )
 
 
@@ -195,7 +199,9 @@ class MassReply(AuthenticatedApiView):
                 "errors": ["missing conversation_ids"],
             }, status=400)
 
-        reply_to_conversations(immo_id, self.request_json["conversation_ids"], self.request_json["message"])
+        attachments = self.request_json.get("attachment_ids", [])
+
+        reply_to_conversations(immo_id, self.request_json["conversation_ids"], self.request_json["message"], attachments)
 
         return self.render_json_response({"status": "ok"})
 
@@ -230,3 +236,57 @@ class MassChange(AuthenticatedApiView):
             conversations.update(notes=self.request_json["notes"].strip(), date_last_change=timezone.now())
 
         return self.render_json_response({"status": "ok"})
+
+
+class UploadAttachment(AuthenticatedApiView):
+    require_json = True
+
+    def post(self, request, immo_id):
+        if "filename" not in self.request_json:
+            return self.render_json_response({
+                "errors": ["missing filename"],
+            }, status=400)
+
+        if "content" not in self.request_json:
+            return self.render_json_response({
+                "errors": ["missing content"],
+            }, status=400)
+
+        try:
+            _ = base64.b64decode(self.request_json["content"])
+        except binascii.Error:
+            return self.render_json_response({
+                "errors": ["invalid base64 content"],
+            }, status=400)
+
+        if len(self.request_json["content"]) > 1024*1024*1.33:
+            return self.render_json_response({
+                "errors": ["file is too large (~1 MB allowed)"],
+            })
+
+        attachment = Attachment.objects.create(
+            immobilie_id=immo_id,
+            filename=self.request_json["filename"],
+            content=self.request_json["content"],
+        )
+
+        return self.render_json_response({
+            "status": "ok",
+            "attachment_id": attachment.id,
+        })
+
+
+class ViewAttachment(View):
+    def get(self, request, immo_id, attachment_id):
+        attachment = get_object_or_404(Attachment, immobilie_id=immo_id, id=attachment_id)
+
+        content = base64.b64decode(attachment.content)
+        try:
+            mimetype = magic.from_buffer(content[:2048], mime=True)
+        except:
+            mimetype = "application/octet-stream"
+
+        response = HttpResponse(content, content_type=mimetype)
+        response['Content-Disposition'] = f'attachment; filename="{attachment.filename}"'
+
+        return response

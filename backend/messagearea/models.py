@@ -33,7 +33,6 @@ class Conversation(models.Model):
     is_read = models.BooleanField(default=False)
     is_replied_to = models.BooleanField(default=False)
     has_been_replied_to = models.BooleanField(default=False)
-    has_attachments = models.BooleanField(default=False)
     count_messages = models.IntegerField()
     date_last_change = models.DateTimeField(auto_now=True)
 
@@ -49,6 +48,14 @@ class Conversation(models.Model):
     def latest_message(self):
         return self._latest
 
+    @property
+    def has_attachments(self):
+        for message in self.message_set.all():
+            if message.attachment_set.exists():
+                return True
+
+        return False
+
     def to_json(self, include_messages=False, since=None):
         data = {
             "id": self.id,
@@ -62,7 +69,7 @@ class Conversation(models.Model):
             "city": self.city,
             "source": self.source or "",
 
-            "has_attachments": False,
+            "has_attachments": self.has_attachments,
             "rating": self.rating,
 
             "notes": self.notes,
@@ -82,7 +89,10 @@ class Conversation(models.Model):
                 "type": self._latest.type,
                 "content": self._latest.message,
                 "date": str(self._latest.date_sent),
-                "attachments": [],
+                "attachments": [{
+                    "filename": att.filename,
+                    "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachment/%d" % (self.immobilie_id, att.id),
+                } for att in self._latest.attachment_set.all()],
             },
         }
 
@@ -95,7 +105,10 @@ class Conversation(models.Model):
                         "type": x.type,
                         "content": x.message,
                         "date": x.date_sent,
-                        "attachments": None,
+                        "attachments": [{
+                            "filename": att.filename,
+                            "url": "https://dev-mobileapp.ohne-makler.net/anfragen/api/immobilien/%d/attachment/%d" % (self.immobilie_id, att.id),
+                        } for att in x.attachment_set.all()],
                     } for x in self.message_set.filter(Q(
                         Q(incomingmessage__isnull=False)
                         | Q(outgoingmessage__isnull=False)
@@ -154,3 +167,12 @@ class OutgoingMessage(Message):
             self.conversation.save(update_fields=["has_been_replied_to", "date_last_change"])
 
         return super().save(*args, **kwargs)
+
+
+class Attachment(models.Model):
+    immobilie_id = models.IntegerField()
+
+    filename = models.CharField(max_length=255)
+    content = models.TextField()
+
+    messages = models.ManyToManyField(Message)
