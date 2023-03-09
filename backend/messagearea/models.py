@@ -176,3 +176,27 @@ class Attachment(models.Model):
     content = models.TextField()
 
     messages = models.ManyToManyField(Message)
+
+
+class User(models.Model):
+    email = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+
+
+class SessionToken(models.Model):
+    user = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+    )
+
+    token = models.CharField(max_length=255)
+
+
+class DeviceToken(models.Model):
+    user = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+    )
+
+    token = models.CharField(max_length=255)
+    label = models.CharField(max_length=255)

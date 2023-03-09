@@ -16,6 +16,7 @@ urlpatterns = [
     re_path(r"^api/immobilien/(?P<immo_id>\d+)/conversations/masschange$", api_views.MassChange.as_view()),
     re_path(r"^api/immobilien/(?P<immo_id>\d+)/attachments$", api_views.UploadAttachment.as_view()),
     re_path(r"^api/immobilien/(?P<immo_id>\d+)/attachments/(?P<attachment_id>\d+)$", api_views.ViewAttachment.as_view()),
+    path("api/devicetoken", api_views.DeviceTokenView.as_view()),
 
     # reason app
     #re_path(r"^immobilie/(?P<immo_id>\d+)/conversations$", ConversationListForImmobilie.as_view()),

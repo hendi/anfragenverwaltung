@@ -4,6 +4,7 @@ import time
 import base64
 import binascii
 import magic
+import random
 from datetime import datetime
 
 from django.template.loader import render_to_string
@@ -23,11 +24,13 @@ from django.utils.decorators import method_decorator
 from braces.views import JSONResponseMixin, JsonRequestResponseMixin, CsrfExemptMixin
 
 from .models import Conversation, Message, IncomingMessage, OutgoingMessage, Attachment
+from .models import User, SessionToken, DeviceToken
 from .views import qs_for_folder, reply_to_conversation, reply_to_conversations
 
 
 class LoginView(CsrfExemptMixin, JsonRequestResponseMixin, View):
     require_json = True
+    user = None
 
     def post(self, request):
         if not self.request_json.get("username") \
@@ -38,9 +41,22 @@ class LoginView(CsrfExemptMixin, JsonRequestResponseMixin, View):
             }, status=400)
 
         if self.request_json["password"] == "pass":
+            user, _ = User.objects.get_or_create(
+                email=self.request_json["username"],
+                defaults={
+                    "password": self.request_json["password"],
+                },
+            )
+
+            random_token = "bearer-token-%d" % random.randint(0, 10000000000)
+            session_token = SessionToken.objects.create(
+                user=user,
+                token=random_token,
+            )
+
             return self.render_json_response({
                 "status": "success",
-                "token": "bearer-token-1234-valid",
+                "token": session_token.token,
             })
 
         return self.render_json_response({
@@ -49,14 +65,20 @@ class LoginView(CsrfExemptMixin, JsonRequestResponseMixin, View):
 
 
 class AuthenticatedApiView(JsonRequestResponseMixin, View):
+    user = None
+
     def check_token(self, token):
         try:
             bearer, token = token.split(" ")
             assert bearer.lower() == "bearer"
 
-            if token.endswith("-valid"):
-                return True
+            session_token = SessionToken.objects.get(token=token)
+            print("valid session", session_token)
+            self.user = session_token.user
+
+            return True
         except:
+            print("invalid token", token)
             return self.render_json_response({
                 "errors": ["invalid Authorization header"],
             }, status=400)
@@ -290,3 +312,39 @@ class ViewAttachment(View):
         response['Content-Disposition'] = f'attachment; filename="{attachment.filename}"'
 
         return response
+
+
+class DeviceTokenView(AuthenticatedApiView):
+    #require_json = True
+
+    def get(self, request):
+        return self.render_json_response(
+            [
+                {
+                    "token": x.token,
+                    "label": x.label,
+                }
+                for x in self.user.devicetoken_set.all()
+            ]
+        )
+
+    def post(self, request):
+        if "device_token" not in self.request_json:
+            return self.render_json_response({
+                "errors": ["missing device_token"],
+            }, status=400)
+
+        if "device_label" not in self.request_json:
+            return self.render_json_response({
+                "errors": ["missing device_label"],
+            }, status=400)
+
+        DeviceToken.objects.update_or_create(
+            user=self.user,
+            token=self.request_json["device_token"],
+            defaults={
+                "label": self.request_json["device_label"],
+            }
+        )
+
+        return self.render_json_response({"status": "ok"})
