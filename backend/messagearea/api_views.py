@@ -20,12 +20,18 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
-
 from braces.views import JSONResponseMixin, JsonRequestResponseMixin, CsrfExemptMixin
+
+import firebase_admin
+from firebase_admin import credentials, messaging
 
 from .models import Conversation, Message, IncomingMessage, OutgoingMessage, Attachment
 from .models import User, SessionToken, DeviceToken
 from .views import qs_for_folder, reply_to_conversation, reply_to_conversations
+
+
+cred = credentials.Certificate("firebase-token.json")
+firebase_admin.initialize_app(cred)
 
 
 class LoginView(CsrfExemptMixin, JsonRequestResponseMixin, View):
@@ -348,3 +354,44 @@ class DeviceTokenView(AuthenticatedApiView):
         )
 
         return self.render_json_response({"status": "ok"})
+
+
+def firebase(token, payload):
+    message = messaging.Message(
+        data=payload,
+        token=token,
+    )
+
+    response = messaging.send(message)
+    return response
+
+
+class DevFirebaseView(CsrfExemptMixin, JsonRequestResponseMixin, View):
+    require_json = True
+
+    def post(self, request):
+        if "token" not in self.request_json:
+            return self.render_json_response({
+                "errors": ["token"],
+            }, status=400)
+
+        if "payload" not in self.request_json:
+            return self.render_json_response({
+                "errors": ["payload"],
+            }, status=400)
+
+        if not type(self.request_json["payload"]) is dict:
+            return self.render_json_response({
+                "errors": ["payload must be a dict"],
+            }, status=400)
+
+        try:
+            response = firebase(self.request_json["token"], self.request_json["payload"])
+        except firebase_admin.exceptions.InvalidArgumentError as e:
+            return self.render_json_response({
+                "errors": [str(e)],
+            }, status=400)
+
+        return self.render_json_response({
+            "firebase_response": response,
+        })
