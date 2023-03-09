@@ -387,7 +387,7 @@ class DevFirebaseView(CsrfExemptMixin, JsonRequestResponseMixin, View):
 
         try:
             response = firebase(self.request_json["token"], self.request_json["payload"])
-        except firebase_admin.exceptions.InvalidArgumentError as e:
+        except (firebase_admin.exceptions.InvalidArgumentError, ValueError) as e:
             return self.render_json_response({
                 "errors": [str(e)],
             }, status=400)
