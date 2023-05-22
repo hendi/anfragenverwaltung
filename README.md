@@ -2,7 +2,7 @@
 
 ```
 # Copy over the default env variables
-cp .env.defaults .env.locals
+cp .env.defaults .env.local
 
 yarn
 
