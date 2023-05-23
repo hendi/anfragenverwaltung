@@ -41,8 +41,7 @@ let make = (
             }
           | None => []
           }
-          
-          onReplySend(conversation, self.state.message_text, attachments)
+          onReplySend(conversation, state.message_text, attachments)
           None
         },
       )
