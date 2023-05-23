@@ -396,6 +396,8 @@ type action =
   | SelectOrUnselectAllConversations(bool)
   | SendMassReply(array<conversation>, string, array<string>, string => int)
   | FilterTextChanged(string)
+  | ResetInteractedList(list<int>)
+  | UpdateInteractedList(int)
 
 let initialState = {
   conversations: [],
@@ -462,16 +464,19 @@ let make = (~immobilieId: int) => {
     }
   })
 
+/*
   React.useEffect2(() => {
     switch currentConversation {
     | Some(currentConversation) =>
-      setActiveFolder(_prev => {
-        ByRating(currentConversation.rating)
-      })
+      if (!currentConversation.is_in_trash) {
+        setActiveFolder(_prev => {
+          ByRating(currentConversation.rating)
+        })
+      }
     | None => ()
     }
     None
-  }, (currentConversation, setActiveFolder))
+  }, (currentConversation, setActiveFolder))*/
 
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
@@ -479,6 +484,19 @@ let make = (~immobilieId: int) => {
       ReactUpdate.Update({
         ...state,
         filterText: text->Js.String2.trim->Js.String2.toLowerCase,
+      })
+    | ResetInteractedList(newList) =>
+      ReactUpdate.Update({
+        ...state,
+        interactedWithConversations: newList,
+      })
+    | UpdateInteractedList(conversationId) =>
+      ReactUpdate.Update({
+        ...state,
+        interactedWithConversations: List.append(
+              state.interactedWithConversations,
+              list{conversationId},
+            )
       })
     | ShowRoute(newRoute) =>
       let selected_conversations = if newRoute != route {
@@ -552,6 +570,23 @@ let make = (~immobilieId: int) => {
       })
     }
   , initialState)
+
+  React.useEffect1(() => {
+    switch currentConversation {
+    | Some(currentConversation) =>
+      Js.log2("Current Conversation:",currentConversation)
+      send(UpdateInteractedList(currentConversation.id))
+    | None => ()
+    }
+    None
+  }, [currentConversation])
+
+
+  React.useEffect1(() => {
+    Js.log2("Folder change to", activeFolder)
+    send(ResetInteractedList(list{}))
+    None
+  }, [activeFolder])
 
   let onReadStatus = (conversation, isRead) =>
     markConversationAsReadMutation(. (conversation, isRead))
