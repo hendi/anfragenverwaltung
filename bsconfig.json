@@ -15,13 +15,12 @@
   "suffix": ".bs.js",
   "bs-dependencies": [
     "@rescript/react",
-    "bs-jest",
-    "bs-fetch",
-    "@glennsl/bs-json"
+    "@glennsl/rescript-fetch",
+    "@rescript/core"
   ],
-  "reason": {
-    "react-jsx": 3
+  "jsx": {
+    "version": 4
   },
-  "bsc-flags": ["-bs-super-errors"],
+  "bsc-flags": ["-open RescriptCore"],
   "refmt": 3
 }

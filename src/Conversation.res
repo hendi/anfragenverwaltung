@@ -1,7 +1,5 @@
 /* %%raw(`import './Conversation.css'`) */
 
-open Utils
-
 open ConversationData
 
 type state = {
@@ -14,9 +12,15 @@ module TrashButton = {
   let make = (~onClick, ~isInTrash: bool) => {
     <button className="ConversationTrasher" onClick>
       {if isInTrash {
-        <span className="btn"> <i className="icon-undo" /> {textEl("Wiederherstellen")} </span>
+        <span className="btn">
+          <i className="icon-undo" />
+          {"Wiederherstellen"->React.string}
+        </span>
       } else {
-        <span className="btn"> <i className="icon-trash" /> {textEl(`Löschen`)} </span>
+        <span className="btn">
+          <i className="icon-trash" />
+          {`Löschen`->React.string}
+        </span>
       }}
     </button>
   }
@@ -54,8 +58,7 @@ let make = (
 
   let scrollUp = () =>
     switch scrollableRef.current->Js.Nullable.toOption {
-    | Some(domNode) =>
-      scrollElementToTop(domNode)->ignore
+    | Some(domNode) => scrollElementToTop(domNode)->ignore
     | None => ()
     }
 
@@ -63,22 +66,25 @@ let make = (
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
     | ToggleNotes => ReactUpdate.Update({...state, show_notes: !state.show_notes})
-    | NotesChanged(notes) => ReactUpdate.Update({...state, notes: notes})
+    | NotesChanged(notes) => ReactUpdate.Update({...state, notes})
     }
   , initialState)
 
   <div
-    className={list{
-      "Conversation",
-      "flex flex-col h-full",
-      switch conversation.rating {
-      | Green => "rating-green"
-      | Yellow => "rating-yellow"
-      | Red => "rating-red"
-      | Unrated => "rating-unrated"
-      },
-      conversation.is_in_trash ? "is_in_trash" : "",
-    } |> String.concat(" ")}>
+    className={Array.joinWith(
+      [
+        "Conversation",
+        "flex flex-col h-full",
+        switch conversation.rating {
+        | Green => "rating-green"
+        | Yellow => "rating-yellow"
+        | Red => "rating-red"
+        | Unrated => "rating-unrated"
+        },
+        conversation.is_in_trash ? "is_in_trash" : "",
+      ],
+      " ",
+    )}>
     <div className="header">
       <div className="pull-right" style={ReactDOM.Style.make(~paddingTop="2px", ())}>
         <ConversationPrinter conversation />
@@ -91,29 +97,42 @@ let make = (
         />
         <ConversationRater conversation onRating />
       </div>
-      <h2> {textEl(conversation.name)} </h2>
-      <span> <strong> {textEl("E-Mail: ")} </strong> {textEl(conversation.email)} </span>
+      <h2> {conversation.name->React.string} </h2>
+      <span>
+        <strong> {"E-Mail: "->React.string} </strong>
+        {conversation.email->React.string}
+      </span>
       {switch conversation.phone {
       | Some("") => React.null
-      | Some(phone) => <span> <strong> {textEl("Telefon: ")} </strong> {textEl(phone)} </span>
+      | Some(phone) =>
+        <span>
+          <strong> {"Telefon: "->React.string} </strong>
+          {phone->React.string}
+        </span>
       | None => React.null
       }}
       {switch (conversation.street, conversation.zipcode, conversation.city) {
       | (Some(""), Some(""), _) => React.null
       | (Some(""), Some(zipcode), Some(city)) =>
-        <span> <strong> {textEl("Adresse: ")} </strong> {textEl(zipcode ++ (" " ++ city))} </span>
+        <span>
+          <strong> {"Adresse: "->React.string} </strong>
+          {`${zipcode} ${city}`->React.string}
+        </span>
       | (Some(street), Some(zipcode), Some(city)) =>
         <span>
-          <strong> {textEl("Adresse: ")} </strong>
-          {textEl(street ++ (", " ++ (zipcode ++ (" " ++ city))))}
+          <strong> {"Adresse: "->React.string} </strong>
+          {`${street}, ${zipcode} ${city})`->React.string}
         </span>
       | _ => React.null
       }}
-      <span> <strong> {textEl("Via: ")} </strong> {textEl(conversation.source)} </span>
+      <span>
+        <strong> {"Via: "->React.string} </strong>
+        {conversation.source->React.string}
+      </span>
       {if String.length(state.notes) > 0 {
         <div className="hidden-unless-print">
-          <strong> {textEl("Private Notizen: ")} </strong>
-          <p className="nl2br"> {textEl(state.notes)} </p>
+          <strong> {"Private Notizen: "->React.string} </strong>
+          <p className="nl2br"> {state.notes->React.string} </p>
         </div>
       } else {
         React.null
@@ -122,9 +141,9 @@ let make = (
         <a onClick={_event => send(ToggleNotes)}>
           <i className={state.show_notes ? "icon-caret-down" : "icon-caret-right"} />
           {if String.length(state.notes) > 0 || String.length(conversation.notes) > 0 {
-            <strong> {textEl("Private Notizen")} </strong>
+            <strong> {"Private Notizen"->React.string} </strong>
           } else {
-            textEl("Private Notizen")
+            "Private Notizen"->React.string
           }}
         </a>
         {if state.show_notes {
@@ -138,7 +157,7 @@ let make = (
                 className="btn btn-primary"
                 onClick={_event => onSaveNotes(conversation, state.notes)}
                 disabled={state.notes == conversation.notes}>
-                {textEl("Notizen speichern")}
+                {"Notizen speichern"->React.string}
               </button>
             } else {
               React.null
@@ -150,12 +169,10 @@ let make = (
       </div>
     </div>
     // main area
-    <div
-      className="overflow-y-auto"
-      ref={ReactDOM.Ref.domRef(scrollableRef)}>
+    <div className="overflow-y-auto" ref={ReactDOM.Ref.domRef(scrollableRef)}>
       <div className="space-y-3 mb-12">
         {if loading {
-          <p> {textEl("Nachrichten werden geladen...")} </p>
+          <p> {"Nachrichten werden geladen..."->React.string} </p>
         } else {
           messages
           ->Js.Array2.map((message: message) =>

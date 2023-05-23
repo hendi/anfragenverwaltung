@@ -5,9 +5,9 @@
 let apiBaseUrl = vite_api_url
 
 type rating =
-  | Green
-  | Yellow
-  | Red
+  | @as("green") Green
+  | @as("yellow") Yellow
+  | @as("red") Red
   | Unrated
 
 module Folder = {
@@ -62,97 +62,45 @@ and attachment = {
 }
 
 module Decode = {
-  let rec single_conversation = (json): conversation => {
-    open Json.Decode
-    {
-      id: json |> field("id", int),
-      immobilie_id: json |> field("immobilie_id", int),
-      name: json |> field("name", string),
-      email: json |> field("email", string),
-      phone: json |> optional(field("phone", string)),
-      street: json |> optional(field("street", string)),
-      zipcode: json |> optional(field("zipcode", string)),
-      city: json |> optional(field("city", string)),
-      source: json |> field("source", string),
-      date_last_message: json |> field("date_last_message", string),
-      count_messages: json |> field("count_messages", int),
-      latest_message: json |> field("latest_message", single_message),
-      rating: json
-      |> optional(field("rating", string))
-      |> (
-        rating =>
-          switch rating {
-          | Some("green") => Green
-          | Some("yellow") => Yellow
-          | Some("red") => Red
-          | _ => Unrated
-          }
-      ),
-      has_attachments: json |> field("has_attachments", bool),
-      notes: json |> field("notes", string),
-      is_read: json |> field("is_read", bool),
-      is_ignored: json |> field("is_ignored", bool),
-      is_replied_to: json |> field("is_replied_to", bool),
-      has_been_replied_to: json |> field("has_been_replied_to", bool),
-      is_in_trash: json |> field("is_in_trash", bool),
-    }
-  }
-  and single_message = (json): message => {
-    open Json.Decode
-    {
-      id: json |> field("id", int),
-      /* conversation: json |> field("conversation", conversation), */
-      conversation_id: json |> field("conversation_id", int),
-      type_: json
-      |> field("type", string)
-      |> (
-        type_ =>
-          switch type_ {
-          | "incoming" => Incoming
-          | "outgoing" => Outgoing
-          | _ => failwith("invalid message type")
-          }
-      ),
-      content: json |> field("content", string),
-      date: json |> field("date", string),
-      attachments: json |> field("attachments", many_attachments),
-    }
-  }
-  and single_attachment = (json): attachment => {
-    open Json.Decode
-    {
-      filename: json |> field("filename", string),
-      mimetype: json |> field("mimetype", string),
-      url: json |> field("url", string),
-    }
-  }
-  and many_conversations = json => json |> Json.Decode.array(single_conversation)
-  and many_messages = (json): array<message> => json |> Json.Decode.array(single_message)
-  and many_attachments = (json): array<attachment> => json |> Json.Decode.array(single_attachment)
+  /** Unsafely coerces a backend json payload for a conversation. */
+  external single_conversation: Js.Json.t => conversation = "%identity"
+
+  /** Unsafely coerces a backend json payload for an array of conversations. */
+  external many_conversations: Js.Json.t => array<conversation> = "%identity"
+
+  /** Unsafely coerces a backend json payload for a message. */
+  external single_message: Js.Json.t => message = "%identity"
+
+  /** Unsafely coerces a backend json payload for an array of messages. */
+  external many_messages: Js.Json.t => array<message> = "%identity"
 }
 
-let fetchConversations = (immobilie_id): Js.Promise.t<array<conversation>> => {
-  open Promise2
-  Fetch.fetchWithInit(
-    apiBaseUrl ++ ("/anfragen/immobilie/" ++ (string_of_int(immobilie_id) ++ "/conversations")),
-    Fetch.RequestInit.make(~credentials=Include, ()),
-  )
-  ->then(Fetch.Response.json)
-  ->then(json => json->Decode.many_conversations->resolve)
+let fetchConversations = async (immobilie_id): array<conversation> => {
+  open Fetch
+
+  let data = await fetch(
+    `${apiBaseUrl}/anfragen/immobilie/${Belt.Int.toString(immobilie_id)}/conversations`,
+    {
+      credentials: #"include",
+    },
+  )->Promise.then(Response.json)
+
+  Decode.many_conversations(data)
 }
 
-let fetchMessages = (~conversationId: int, ~immobilieId: int): Js.Promise.t<array<message>> => {
-  open Promise2
-  Fetch.fetchWithInit(
-    apiBaseUrl ++
-    ("/anfragen/immobilie/" ++
-    (Belt.Int.toString(immobilieId) ++
-    ("/conversations/" ++
-    (Belt.Int.toString(conversationId) ++ "/messages")))),
-    Fetch.RequestInit.make(~credentials=Include, ()),
-  )
-  ->then(Fetch.Response.json)
-  ->then(json => json->Decode.many_messages->resolve)
+let fetchMessages = async (~conversationId: int, ~immobilieId: int): array<message> => {
+  open Fetch
+
+  let data = await fetch(
+    `${apiBaseUrl}/anfragen/immobilie/${Belt.Int.toString(
+        immobilieId,
+      )}/conversations/${Belt.Int.toString(conversationId)}/messages`,
+    {
+      credentials: #"include",
+    },
+  )->Promise.then(Response.json)
+
+  Decode.many_messages(data)
 }
 
 /*
@@ -204,94 +152,99 @@ let fetchMessages = (~conversationId: int, ~immobilieId: int): Js.Promise.t<arra
      |> ignore
    );
  */
-let postReply = (conversation: conversation, msg: string, attachments: array<string>): Js.Promise.t<
-  message,
-> => {
-  let dict = Js.Dict.empty()
-  Js.Dict.set(dict, "message", Js.Json.string(msg))
-  Js.Dict.set(dict, "attachments", Js.Json.stringArray(attachments))
-  Fetch.fetchWithInit(
+let postReply = async (
+  conversation: conversation,
+  msg: string,
+  attachments: array<string>,
+): message => {
+  open Fetch
+
+  let dict = Dict.fromArray([
+    ("message", Js.Json.string(msg)),
+    ("attachments", Js.Json.stringArray(attachments)),
+  ])
+
+  let data = await fetch(
     apiBaseUrl ++
     ("/anfragen/immobilie/" ++
     (Belt.Int.toString(conversation.immobilie_id) ++
     ("/conversations/" ++
     (Belt.Int.toString(conversation.id) ++ "/reply")))),
-    Fetch.RequestInit.make(
-      ~credentials=Include,
-      ~method_=Post,
-      ~body=Fetch.BodyInit.make(Js.Json.stringify(Js.Json.object_(dict))),
-      (),
-    ),
-  )
-  ->Promise2.then(Fetch.Response.json)
-  ->Promise2.thenResolve(json => json->Decode.single_message)
+    {
+      credentials: #"include",
+      method: #POST,
+      body: dict->Js.Json.stringifyAny->Option.getExn->Body.string,
+    },
+  )->Promise.then(Response.json)
+
+  Decode.single_message(data)
 }
 
-let postMassReply = (
+let postMassReply = async (
   immobilie_id,
   conversations: array<conversation>,
   message_text,
   attachments: array<string>,
-  callback,
-) => {
-  let json = {
-    open Json.Encode
-    object_(list{
-      ("conversation_ids", array(int, Array.map(c => c.id, conversations))),
-      ("message", string(message_text)),
-      ("attachments", Js.Json.stringArray(attachments)),
-    })
-  } |> Js.Json.stringify
-  open Js.Promise
-  Fetch.fetchWithInit(
-    apiBaseUrl ++ ("/anfragen/immobilie/" ++ (string_of_int(immobilie_id) ++ "/massreply")),
-    Fetch.RequestInit.make(
-      ~credentials=Include,
-      ~method_=Post,
-      ~body=Fetch.BodyInit.make(json),
-      (),
+): unit => {
+  let dict = Dict.fromArray([
+    (
+      "conversation_ids",
+      conversations->Array.map(c => Belt.Float.fromInt(c.id)->Js.Json.number)->Js.Json.array,
     ),
+    ("message", Js.Json.string(message_text)),
+    ("attachments", Js.Json.stringArray(attachments)),
+  ])
+
+  open Fetch
+
+  let _ = await fetch(
+    apiBaseUrl ++ ("/anfragen/immobilie/" ++ (Belt.Int.toString(immobilie_id) ++ "/massreply")),
+    {
+      credentials: #"include",
+      method: #POST,
+      body: dict->Js.Json.stringifyAny->Option.getExn->Body.string,
+    },
   )
-  |> then_(Fetch.Response.json)
-  |> then_(json => {
-    callback(json)
-    resolve()
-  })
-  |> ignore
 }
 
-let postMassTrash = (immobilie_id, conversationIds: array<int>): Js.Promise.t<Js.Json.t> => {
-  let jsonStr = {
-    open Json.Encode
-    object_(list{("conversation_ids", array(int, conversationIds))})->Js.Json.stringify
-  }
-  Fetch.fetchWithInit(
-    apiBaseUrl ++ ("/anfragen/immobilie/" ++ (string_of_int(immobilie_id) ++ "/masstrash")),
-    Fetch.RequestInit.make(
-      ~credentials=Include,
-      ~method_=Post,
-      ~body=Fetch.BodyInit.make(jsonStr),
-      (),
+let postMassTrash = async (immobilie_id, conversationIds: array<int>): Js.Json.t => {
+  let dict = Dict.fromArray([
+    (
+      "conversation_ids",
+      conversationIds->Array.map(cid => Belt.Float.fromInt(cid)->Js.Json.number)->Js.Json.array,
     ),
-  )->Promise2.then(Fetch.Response.json)
+  ])
+  open Fetch
+
+  await fetch(
+    apiBaseUrl ++ ("/anfragen/immobilie/" ++ (Belt.Int.toString(immobilie_id) ++ "/masstrash")),
+    {
+      credentials: #"include",
+      method: #POST,
+      body: dict->Js.Json.stringifyAny->Option.getExn->Body.string,
+    },
+  )->Promise.then(Response.json)
 }
 
-let updateConversation = (~id: int, ~immobilieId: int, data: Js.Dict.t<Js.Json.t>): Js.Promise.t<
-  conversation,
-> => {
-  Fetch.fetchWithInit(
+let updateConversation = async (
+  ~id: int,
+  ~immobilieId: int,
+  data: Js.Dict.t<Js.Json.t>,
+): conversation => {
+  open Fetch
+
+  let response = await fetch(
     apiBaseUrl ++
     ("/anfragen/immobilie/" ++
     (Belt.Int.toString(immobilieId) ++ ("/conversations/" ++ Belt.Int.toString(id)))),
-    Fetch.RequestInit.make(
-      ~credentials=Include,
-      ~method_=Post,
-      ~body=Fetch.BodyInit.make(Js.Json.stringify(Js.Json.object_(data))),
-      (),
-    ),
-  )
-  ->Promise2.then(Fetch.Response.json)
-  ->Promise2.thenResolve(json => json->Decode.single_conversation)
+    {
+      credentials: #"include",
+      method: #POST,
+      body: data->Js.Json.stringifyAny->Option.getExn->Body.string,
+    },
+  )->Promise.then(Response.json)
+
+  Decode.single_conversation(response)
 }
 
 let rateConversation = (conversation: conversation, rating: rating) => {

@@ -17,13 +17,13 @@ let filterConversations = (
             true
           } else {
             open Utils
-            string_contains(c.name |> String.lowercase, filterText) ||
-            (string_contains(c.email |> String.lowercase, filterText) ||
-            (string_contains(c.phone->getWithDefault("") |> String.lowercase, filterText) ||
-            (string_contains(c.city->getWithDefault("") |> String.lowercase, filterText) ||
-            (string_contains(c.zipcode->getWithDefault("") |> String.lowercase, filterText) ||
-            (string_contains(c.street->getWithDefault("") |> String.lowercase, filterText) ||
-            (string_contains(c.latest_message.content |> String.lowercase, filterText) ||
+            string_contains(String.toLowerCase(c.name), filterText) ||
+            (string_contains(String.toLowerCase(c.email), filterText) ||
+            (string_contains(String.toLowerCase(c.phone->getWithDefault("")), filterText) ||
+            (string_contains(String.toLowerCase(c.city->getWithDefault("")), filterText) ||
+            (string_contains(String.toLowerCase(c.zipcode->getWithDefault("")), filterText) ||
+            (string_contains(String.toLowerCase(c.street->getWithDefault("")), filterText) ||
+            (string_contains(String.toLowerCase(c.latest_message.content), filterText) ||
             string_contains(c.notes, filterText)))))))
           }
         )
@@ -31,32 +31,32 @@ let filterConversations = (
   switch folder {
   | All =>
     conversations->Js.Array2.filter(c =>
-      !c.is_in_trash || List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
+      !c.is_in_trash || interactedWithConversations->List.has(c.id, (a, b) => a == b)
     )
   | New =>
     conversations->Js.Array2.filter((c: conversation) =>
       (!c.is_in_trash && (c.rating == Unrated && (!c.is_replied_to && !c.is_ignored))) ||
         ((!c.is_in_trash && !c.is_read) ||
-        List.exists((c_id: int) => c_id == c.id, interactedWithConversations))
+        interactedWithConversations->List.has(c.id, (a, b) => a == b))
     )
   | ByRating(rating) =>
     conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && c.rating == rating) ||
-        List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
+        interactedWithConversations->List.has(c.id, (a, b) => a == b)
     )
   | Unreplied =>
     conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && (!c.is_replied_to && !c.is_ignored)) ||
-        List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
+        interactedWithConversations->List.has(c.id, (a, b) => a == b)
     )
   | Replied =>
     conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && c.has_been_replied_to) ||
-        List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
+        interactedWithConversations->List.has(c.id, (a, b) => a == b)
     )
   | Trash =>
     conversations->Js.Array2.filter(c =>
-      c.is_in_trash || List.exists((c_id: int) => c_id == c.id, interactedWithConversations)
+      c.is_in_trash || interactedWithConversations->List.has(c.id, (a, b) => a == b)
     )
   }
 }
@@ -135,22 +135,21 @@ module Route = {
 module Hooks = {
   let useMarkConversationAsReadMutation = client => {
     let (_, mutation) = Query.useMutation(
-      ~onMutate=(params: (conversation, bool)) => {
+      ~onMutate=async (params: (conversation, bool)) => {
         let (conversation, _) = params
 
         let queryKey = (#conversation, conversation.id)
-        client
-        ->ReactQuery.Client.cancelQueries(queryKey)
-        ->Promise2.thenResolve(() => {
-          let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
 
-          client->ReactQuery.Client.setQueryData(queryKey, conversation)
+        await client->ReactQuery.Client.cancelQueries(queryKey)
 
-          // return "rollback function" as context
-          () => {
-            client->ReactQuery.Client.setQueryData(queryKey, previousConv)
-          }
-        })
+        let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
+
+        client->ReactQuery.Client.setQueryData(queryKey, conversation)
+
+        // return "rollback function" as context
+        () => {
+          client->ReactQuery.Client.setQueryData(queryKey, previousConv)
+        }
       },
       ~onError=(_err, _params, cleanup) => {
         cleanup()
@@ -168,22 +167,20 @@ module Hooks = {
 
   let useRateConversationMutation = client => {
     let (_, mutation) = Query.useMutation(
-      ~onMutate=(params: (conversation, rating)) => {
+      ~onMutate=async (params: (conversation, rating)) => {
         let (conversation, _) = params
 
         let queryKey = (#conversation, conversation.id)
-        client
-        ->ReactQuery.Client.cancelQueries(queryKey)
-        ->Promise2.thenResolve(() => {
-          let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
 
-          client->ReactQuery.Client.setQueryData(queryKey, conversation)
+        await client->ReactQuery.Client.cancelQueries(queryKey)
+        let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
 
-          // return "rollback function" as context
-          () => {
-            client->ReactQuery.Client.setQueryData(queryKey, previousConv)
-          }
-        })
+        client->ReactQuery.Client.setQueryData(queryKey, conversation)
+
+        // return "rollback function" as context
+        () => {
+          client->ReactQuery.Client.setQueryData(queryKey, previousConv)
+        }
       },
       ~onError=(_err, _params, cleanup) => {
         cleanup()
@@ -201,21 +198,18 @@ module Hooks = {
 
   let useUpdateConversationNotes = client => {
     let (_, mutation) = Query.useMutation(
-      ~onMutate=(params: (conversation, string)) => {
+      ~onMutate=async (params: (conversation, string)) => {
         let (conversation, _) = params
 
         let queryKey = (#conversation, conversation.id)
-        client
-        ->ReactQuery.Client.cancelQueries(queryKey)
-        ->Promise2.thenResolve(() => {
-          let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
+        await client->ReactQuery.Client.cancelQueries(queryKey)
+        let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
 
-          client->ReactQuery.Client.setQueryData(queryKey, conversation)
+        client->ReactQuery.Client.setQueryData(queryKey, conversation)
 
-          () => {
-            client->ReactQuery.Client.setQueryData(queryKey, previousConv)
-          }
-        })
+        () => {
+          client->ReactQuery.Client.setQueryData(queryKey, previousConv)
+        }
       },
       ~onError=(_err, _params, cleanup) => {
         cleanup()
@@ -234,21 +228,18 @@ module Hooks = {
 
   let useUpdateTrashMutation = client => {
     let (_, mutation) = Query.useMutation(
-      ~onMutate=(params: (conversation, bool)) => {
+      ~onMutate=async (params: (conversation, bool)) => {
         let (conversation, _) = params
 
         let queryKey = (#conversation, conversation.id)
-        client
-        ->ReactQuery.Client.cancelQueries(queryKey)
-        ->Promise2.thenResolve(() => {
-          let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
+        await client->ReactQuery.Client.cancelQueries(queryKey)
+        let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
 
-          client->ReactQuery.Client.setQueryData(queryKey, conversation)
+        client->ReactQuery.Client.setQueryData(queryKey, conversation)
 
-          () => {
-            client->ReactQuery.Client.setQueryData(queryKey, previousConv)
-          }
-        })
+        () => {
+          client->ReactQuery.Client.setQueryData(queryKey, previousConv)
+        }
       },
       ~onError=(_err, _params, cleanup) => {
         cleanup()
@@ -267,28 +258,25 @@ module Hooks = {
 
   let useTrashAllMutation = client => {
     let (_, mutation) = Query.useMutation(
-      ~onMutate=(params: (int, array<int>)) => {
+      ~onMutate=async (params: (int, array<int>)) => {
         let (_immobilieId, _conversationIds) = params
         let queryKey = #conversation
 
-        client
-        ->ReactQuery.Client.cancelQueries(queryKey)
-        ->Promise2.thenResolve(() => {
-          let previousConvs: option<array<conversation>> =
-            client->ReactQuery.Client.getQueryData(queryKey)
+        await client->ReactQuery.Client.cancelQueries(queryKey)
+        let previousConvs: option<array<conversation>> =
+          client->ReactQuery.Client.getQueryData(queryKey)
 
-          let newConversations = previousConvs->Belt.Option.map(previousConvs => {
-            previousConvs->Belt.Array.map((conv: conversation) => {
-              {...conv, is_in_trash: true}
-            })
+        let newConversations = previousConvs->Belt.Option.map(previousConvs => {
+          previousConvs->Belt.Array.map((conv: conversation) => {
+            {...conv, is_in_trash: true}
           })
-
-          client->ReactQuery.Client.setQueryData(queryKey, newConversations)
-
-          () => {
-            client->ReactQuery.Client.setQueryData(queryKey, previousConvs)
-          }
         })
+
+        client->ReactQuery.Client.setQueryData(queryKey, newConversations)
+
+        () => {
+          client->ReactQuery.Client.setQueryData(queryKey, previousConvs)
+        }
       },
       ~onError=(_err, _params, cleanup) => {
         cleanup()
@@ -307,32 +295,30 @@ module Hooks = {
 
   let useIgnoreConversationMutation = client => {
     let (_, mutation) = Query.useMutation(
-      ~onMutate=(params: (int, int, bool)) => {
+      ~onMutate=async (params: (int, int, bool)) => {
         let (conversationId, _immobilieId, isIgnored) = params
 
         let queryKey = #conversation
-        client
-        ->ReactQuery.Client.cancelQueries(queryKey)
-        ->Promise2.thenResolve(() => {
-          let previousConvs: option<array<conversation>> =
-            client->ReactQuery.Client.getQueryData(queryKey)
+        await client->ReactQuery.Client.cancelQueries(queryKey)
 
-          let newConversations = previousConvs->Belt.Option.map(previousConvs => {
-            previousConvs->Belt.Array.map((conv: conversation) => {
-              if conv.id == conversationId {
-                {...conv, is_ignored: isIgnored}
-              } else {
-                conv
-              }
-            })
+        let previousConvs: option<array<conversation>> =
+          client->ReactQuery.Client.getQueryData(queryKey)
+
+        let newConversations = previousConvs->Belt.Option.map(previousConvs => {
+          previousConvs->Belt.Array.map((conv: conversation) => {
+            if conv.id == conversationId {
+              {...conv, is_ignored: isIgnored}
+            } else {
+              conv
+            }
           })
-
-          client->ReactQuery.Client.setQueryData(queryKey, newConversations)
-
-          () => {
-            client->ReactQuery.Client.setQueryData(queryKey, previousConvs)
-          }
         })
+
+        client->ReactQuery.Client.setQueryData(queryKey, newConversations)
+
+        () => {
+          client->ReactQuery.Client.setQueryData(queryKey, previousConvs)
+        }
       },
       ~onError=(_err, _params, cleanup) => {
         cleanup()
@@ -351,21 +337,20 @@ module Hooks = {
 
   let useSendReplyMutation = client => {
     let (_, mutation) = Query.useMutation(
-      ~onMutate=(params: (conversation, string, array<string>)) => {
+      ~onMutate=async (params: (conversation, string, array<string>)) => {
         let (conversation, _, _) = params
 
         let queryKey = (#conversation, conversation.id)
-        client
-        ->ReactQuery.Client.cancelQueries(queryKey)
-        ->Promise2.thenResolve(() => {
-          let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
 
-          client->ReactQuery.Client.setQueryData(queryKey, conversation)
+        await client->ReactQuery.Client.cancelQueries(queryKey)
 
-          () => {
-            client->ReactQuery.Client.setQueryData(queryKey, previousConv)
-          }
-        })
+        let previousConv = client->ReactQuery.Client.getQueryData(queryKey)
+
+        client->ReactQuery.Client.setQueryData(queryKey, conversation)
+
+        () => {
+          client->ReactQuery.Client.setQueryData(queryKey, previousConv)
+        }
       },
       ~onError=(_err, _params, cleanup) => {
         cleanup()
@@ -464,7 +449,7 @@ let make = (~immobilieId: int) => {
     }
   })
 
-/*
+  /*
   React.useEffect2(() => {
     switch currentConversation {
     | Some(currentConversation) =>
@@ -493,10 +478,7 @@ let make = (~immobilieId: int) => {
     | UpdateInteractedList(conversationId) =>
       ReactUpdate.Update({
         ...state,
-        interactedWithConversations: List.append(
-              state.interactedWithConversations,
-              list{conversationId},
-            )
+        interactedWithConversations: List.add(state.interactedWithConversations, conversationId),
       })
     | ShowRoute(newRoute) =>
       let selected_conversations = if newRoute != route {
@@ -506,7 +488,7 @@ let make = (~immobilieId: int) => {
       }
       // TODO: Add back the original scrollToTop behavior
       ReactUpdate.UpdateWithSideEffects(
-        {...state, selected_conversations: selected_conversations},
+        {...state, selected_conversations},
         _self => {
           newRoute->Route.toUrl->RescriptReactRouter.push
 
@@ -526,8 +508,8 @@ let make = (~immobilieId: int) => {
       ReactUpdate.UpdateWithSideEffects(
         {
           ...state,
-          conversations: Array.map((c: conversation): conversation =>
-            if List.exists((x: conversation) => x.id == c.id, Array.to_list(conversations)) {
+          conversations: state.conversations->Array.map((c: conversation): conversation =>
+            if conversations->Array.find(conv => conv.id == c.id) != None {
               {
                 ...c,
                 count_messages: c.count_messages + 1,
@@ -537,12 +519,15 @@ let make = (~immobilieId: int) => {
             } else {
               c
             }
-          , state.conversations),
+          ),
         },
         _self => {
-          postMassReply(immobilieId, conversations, message_text, attachments, _ =>
+          postMassReply(immobilieId, conversations, message_text, attachments)
+          ->Promise.then(() => {
             cbFunc("")->ignore
-          )
+            Promise.resolve()
+          })
+          ->ignore
           None
         },
       )
@@ -558,10 +543,12 @@ let make = (~immobilieId: int) => {
       ReactUpdate.Update({...state, selected_conversations: newSelectedConversations})
     | SelectOrUnselectAllConversations(selected) =>
       let selected_conversations = selected
-        ? Array.map(
-            (c: conversation) => c.id,
-            filterConversations(list{}, conversations, state.filterText, activeFolder),
-          )
+        ? filterConversations(
+            list{},
+            conversations,
+            state.filterText,
+            activeFolder,
+          )->Array.map((c: conversation) => c.id)
         : []
 
       ReactUpdate.Update({
@@ -574,13 +561,12 @@ let make = (~immobilieId: int) => {
   React.useEffect1(() => {
     switch currentConversation {
     | Some(currentConversation) =>
-      Js.log2("Current Conversation:",currentConversation)
+      Js.log2("Current Conversation:", currentConversation)
       send(UpdateInteractedList(currentConversation.id))
     | None => ()
     }
     None
   }, [currentConversation])
-
 
   React.useEffect1(() => {
     Js.log2("Folder change to", activeFolder)
@@ -589,26 +575,26 @@ let make = (~immobilieId: int) => {
   }, [activeFolder])
 
   let onReadStatus = (conversation, isRead) =>
-    markConversationAsReadMutation(. (conversation, isRead))
+    markConversationAsReadMutation((conversation, isRead))
 
   let onRating = (conversation: conversation, rating, _event) =>
-    rateConversationMutation(. (conversation, rating))
+    rateConversationMutation((conversation, rating))
 
   let onSaveNotes = (conversation: conversation, notes: string) => {
-    updateConversationNotesMutation(. (conversation, notes))
+    updateConversationNotesMutation((conversation, notes))
   }
 
   let onTrash = (conversation, isTrash) => {
-    updateTrashConversationMutation(. (conversation, isTrash))
+    updateTrashConversationMutation((conversation, isTrash))
   }
 
   let onMassTrash = () => {
     let conversationIds = state.selected_conversations->Belt.List.toArray
-    trashAllMutation(. (immobilieId, conversationIds))
+    trashAllMutation((immobilieId, conversationIds))
   }
 
   let onReplySend = (conversation, messageText, attachments) => {
-    postReplyMutation(. (conversation, messageText, attachments))
+    postReplyMutation((conversation, messageText, attachments))
   }
 
   <div>
@@ -659,7 +645,7 @@ let make = (~immobilieId: int) => {
             }
 
             <Conversation
-              key={conversation.id |> string_of_int}
+              key={string_of_int(conversation.id)}
               conversation
               loading=isLoadingMessages
               messages={currentMessages}
@@ -668,7 +654,7 @@ let make = (~immobilieId: int) => {
               onReadStatus
               onReplySend
               onIgnore={() => {
-                ignoreConversationMutation(. (conversation.id, immobilieId, true))
+                ignoreConversationMutation((conversation.id, immobilieId, true))
               }}
               onSaveNotes
               onBack={_event => send(ShowRoute(ConversationList(activeFolder)))}
@@ -678,9 +664,8 @@ let make = (~immobilieId: int) => {
         | MassReply =>
           open Utils
           <MassReply
-            conversations={array_filter(
-              (c: conversation) => element_in_list(c.id, state.selected_conversations),
-              state.conversations,
+            conversations={state.conversations->Array.filter((c: conversation) =>
+              element_in_list(c.id, state.selected_conversations)
             )}
             onMassReplySent={(conversations, message_text, attachments, cbFunc) =>
               send(SendMassReply(conversations, message_text, attachments, cbFunc))}

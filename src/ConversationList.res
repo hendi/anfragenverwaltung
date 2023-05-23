@@ -1,4 +1,4 @@
-/*%%raw(`import './ConversationList.css'`)*/
+/* %%raw(`import './ConversationList.css'`) */
 
 open Utils
 
@@ -13,8 +13,8 @@ let make = (
   ~selectedConversations: list<int>,
   ~onConversationClick,
   ~onRating,
-  ~onTrash,
-  ~onReadStatus,
+  ~onTrash as _,
+  ~onReadStatus as _,
   ~onToggleSelect: conversation => unit,
   ~onToggleSelectAll: bool => unit,
   ~onFilterTextChange,
@@ -36,20 +36,21 @@ let make = (
               (`Alle auswählen`, true)
             }
             <button className="btn" onClick={_evt => onToggleSelectAll(selected)}>
-              <i className="icon-check" /> {textEl(text)}
+              <i className="icon-check" />
+              {textEl(text)}
             </button>
           }
           <button
-            className="btn"
-            disabled={selectedConversations |> List.length == 0}
-            onClick=onMassReply>
-            <i className="icon-mail-reply-all" /> {textEl("Sammelantwort")}
+            className="btn" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
+            <i className="icon-mail-reply-all" />
+            {textEl("Sammelantwort")}
           </button>
           <button
             className="btn pull-right"
-            disabled={selectedConversations |> List.length == 0}
+            disabled={List.length(selectedConversations) == 0}
             onClick={_evt => onMassTrash()}>
-            <i className="icon-trash" /> {textEl(`Löschen`)}
+            <i className="icon-trash" />
+            {textEl(`Löschen`)}
           </button>
         </div>
       } else {
@@ -58,7 +59,7 @@ let make = (
       <input
         className="search"
         type_="search"
-        placeholder=`Nach Name, E-Mail, Telefon suchen …`
+        placeholder={`Nach Name, E-Mail, Telefon suchen …`}
         onChange=onFilterTextChange
       />
     </div>
@@ -78,6 +79,7 @@ let make = (
             active
             onClick={evt => {
               ReactEvent.Mouse.preventDefault(evt)
+
               // don't reload messages if this conversation is currently selected
               if !active {
                 onConversationClick(conversation)

@@ -16,7 +16,10 @@ let make = (~message: message) => {
       {if message.type_ == Incoming {
         textEl("Geschrieben am ")
       } else {
-        <span> <i className="icon-reply" /> {textEl("Beantwortet am ")} </span>
+        <span>
+          <i className="icon-reply" />
+          {textEl("Beantwortet am ")}
+        </span>
       }}
       <IsoDate date={Js.Date.fromString(message.date)} />
       {textEl(" um ")}
@@ -26,19 +29,19 @@ let make = (~message: message) => {
     <p> {textEl(message.content)} </p>
     {if Array.length(message.attachments) > 0 {
       <div>
-        <b> {textEl(`Anhänge`)} </b>
+        <b> {"Anhänge"->React.string} </b>
         <ul>
           {message.attachments
-          |> Array.map((attachment: attachment) =>
+          ->Array.map((attachment: attachment) =>
             <li key=attachment.url>
               {if String.length(attachment.url) > 0 {
-                <a href=attachment.url> {textEl("Anhang: " ++ attachment.filename)} </a>
+                <a href=attachment.url> {("Anhang: " ++ attachment.filename)->React.string} </a>
               } else {
-                textEl("Anhang: " ++ attachment.filename)
+                ("Anhang: " ++ attachment.filename)->React.string
               }}
             </li>
           )
-          |> arrayEl}
+          ->React.array}
         </ul>
       </div>
     } else {

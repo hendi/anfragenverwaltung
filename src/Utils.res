@@ -1,17 +1,16 @@
-let intEl = n => n |> string_of_int |> React.string
+let intEl = n => React.string(string_of_int(n))
 
-let floatEl = n => n |> Js.Float.toString |> React.string
+let floatEl = n => React.string(Js.Float.toString(n))
 
-let numberEl = n => n |> int_of_float |> string_of_int |> React.string
+let numberEl = n => React.string(string_of_int(int_of_float(n)))
 
 let textEl = React.string
 
 let arrayEl = React.array
 
-let array_filter = (func, arr) => arr |> Array.to_list |> List.filter(func) |> Array.of_list
+let array_filter = (func, arr) => Array.filter(func, arr)
 
-let element_in_list = (element, selected_list) =>
-  List.exists(other => other == element, selected_list)
+let element_in_list = (element, selected_list) => selected_list->List.has(element, (a, b) => a == b)
 
 let string_contains: (string, string) => bool = %raw(`
 	function (haystack, needle) {
