@@ -28,9 +28,8 @@ let make = (
     ?onClick
     className={[
       "cursor-pointer p-2",
-      bgColor,
+      conversation.is_in_trash ? "bg-purple-100" : bgColor,
       selected ? "selected" : "",
-      conversation.is_in_trash ? "is_in_trash" : "",
       !conversation.is_read ? "unread" : "",
     ]->Js.Array2.joinWith(" ")}>
     <div>
