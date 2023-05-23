@@ -22,7 +22,9 @@ let items = [
 
 let filterByFolder = (conversations, folder) => {
   switch folder {
-  | Folder.All => conversations
+  | Folder.All => conversations->Js.Array2.filter(c => {
+    !c.is_in_trash
+  })
   | New =>
     conversations->Js.Array2.filter(c => {
       (!c.is_in_trash && (c.rating == Unrated && (!c.is_replied_to && !c.is_ignored))) ||
