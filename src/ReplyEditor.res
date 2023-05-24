@@ -33,7 +33,7 @@ let make = (
     | SendReply =>
       ReactUpdate.UpdateWithSideEffects(
         {...state, message_text: ""},
-        self => {
+        _self => {
           let attachments = switch filepondRef.current {
           | Some(filepond) => {
               let files = filepond->Filepond.Instance.getFiles
@@ -118,7 +118,7 @@ let make = (
         className="btn-send btn btn-primary pull-right"
         disabled={String.length(state.message_text) == 0}
         /* || state.uploads_in_progress != 0 */
-        onClick={evt => {
+        onClick={_evt => {
           send(SendReply)
         }}>
         {textEl("Antwort senden")}

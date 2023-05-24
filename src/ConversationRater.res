@@ -6,12 +6,12 @@ module RateButton = {
   type icon = [#"icon-thumbs-up-alt" | #"icon-unchecked" | #"icon-thumbs-down-alt"]
   @react.component
   let make = (~active=false, ~icon: icon, ~title: string, ~onClick: ReactEvent.Mouse.t => unit) => {
-    let borderColor = active ? "border-black" : "border-transparent" 
+    let borderColor = active ? "border-black" : "border-transparent"
 
     <button
       onClick
       title
-      className=`w-6 h-6 bg-gray-200 ${borderColor} border-2 hover:border-black rounded-md inline-flex justify-center items-center`>
+      className={`w-6 h-6 bg-gray-200 ${borderColor} border-2 hover:border-black rounded-md inline-flex justify-center items-center`}>
       <i className={(icon :> string)} />
     </button>
   }
@@ -22,18 +22,18 @@ let make = (~conversation, ~onRating) => {
   <div className="space-x-1">
     <RateButton
       icon=#"icon-thumbs-up-alt"
-      onClick={onRating(conversation, Green)}
+      onClick={evt => onRating(conversation, Green, evt)}
       title="Als Favoriten markieren"
       active={conversation.rating == Green}
     />
     <RateButton
       icon=#"icon-unchecked"
-      onClick={onRating(conversation, Yellow)}
+      onClick={evt => onRating(conversation, Yellow, evt)}
       title="Als Vielleicht markieren"
       active={conversation.rating == Yellow}
     />
     <RateButton
-      onClick={onRating(conversation, Red)}
+      onClick={evt => onRating(conversation, Red, evt)}
       icon=#"icon-thumbs-down-alt"
       title="Als Uninteressant markieren"
       active={conversation.rating == Red}

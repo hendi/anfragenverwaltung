@@ -1,4 +1,4 @@
-/*%%raw(`import './MassReply.css'`)*/
+/* %%raw(`import './MassReply.css'`) */
 
 open Utils
 
@@ -72,14 +72,17 @@ let make = (~conversations, ~onMassReplySent) => {
       {textEl(`Hinweis: Die Empänger der Nachricht sehen nicht, dass es sich um eine Sammelantwort handelt.`)}
     </p>
     <div className="recipient-list">
-      <div> <strong> {textEl(`Empfänger:`)} </strong> </div>
+      <div>
+        <strong> {textEl(`Empfänger:`)} </strong>
+      </div>
       {conversations
-      |> Array.map((conversation: conversation) =>
-        <div className="recipient-list-item" key={"recipient_" ++ string_of_int(conversation.id)}>
-          {textEl(conversation.name)}
+      ->Array.map((conversation: conversation) =>
+        <div
+          className="recipient-list-item" key={"recipient_" ++ Belt.Int.toString(conversation.id)}>
+          {conversation.name->React.string}
         </div>
       )
-      |> arrayEl}
+      ->React.array}
     </div>
     {if state.sent {
       <div className="alert alert-success">
