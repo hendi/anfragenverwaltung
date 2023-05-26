@@ -78,8 +78,6 @@ let make = (
             selected={element_in_list(conversation.id, selectedConversations)}
             active
             onClick={evt => {
-              ReactEvent.Mouse.preventDefault(evt)
-
               // don't reload messages if this conversation is currently selected
               if !active {
                 onConversationClick(conversation)

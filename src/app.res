@@ -449,20 +449,6 @@ let make = (~immobilieId: int) => {
     }
   })
 
-  /*
-  React.useEffect2(() => {
-    switch currentConversation {
-    | Some(currentConversation) =>
-      if (!currentConversation.is_in_trash) {
-        setActiveFolder(_prev => {
-          ByRating(currentConversation.rating)
-        })
-      }
-    | None => ()
-    }
-    None
-  }, (currentConversation, setActiveFolder))*/
-
   let (state, send) = ReactUpdate.useReducer((state, action) =>
     switch action {
     | FilterTextChanged(text) =>
@@ -473,6 +459,7 @@ let make = (~immobilieId: int) => {
     | ResetInteractedList(newList) =>
       ReactUpdate.Update({
         ...state,
+        selected_conversations: list{},
         interactedWithConversations: newList,
       })
     | UpdateInteractedList(conversationId) =>
@@ -481,14 +468,16 @@ let make = (~immobilieId: int) => {
         interactedWithConversations: List.add(state.interactedWithConversations, conversationId),
       })
     | ShowRoute(newRoute) =>
+       /*
       let selected_conversations = if newRoute != route {
         list{}
       } else {
         state.selected_conversations
       }
+      */
       // TODO: Add back the original scrollToTop behavior
       ReactUpdate.UpdateWithSideEffects(
-        {...state, selected_conversations},
+        {state},
         _self => {
           newRoute->Route.toUrl->RescriptReactRouter.push
 
@@ -537,9 +526,8 @@ let make = (~immobilieId: int) => {
       ) {
         list{conversationId, ...state.selected_conversations}
       } else {
-        Belt.List.filter(state.selected_conversations, convId => convId != conversationId)
+        Belt.List.filter(state.selected_conversations, convId => convId !== conversationId)
       }
-
       ReactUpdate.Update({...state, selected_conversations: newSelectedConversations})
     | SelectOrUnselectAllConversations(selected) =>
       let selected_conversations = selected
