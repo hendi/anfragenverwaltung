@@ -71,6 +71,7 @@ module Route = {
   let fromUrlPath = (path: list<string>): t => {
     switch path {
     | list{} => ConversationList(New)
+    | list{"mass-reply"} => MassReply
     | list{"conversation", id} =>
       switch Belt.Int.fromString(id) {
       | Some(id) => Conversation(id)
