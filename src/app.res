@@ -652,10 +652,9 @@ let make = (~immobilieId: int) => {
           }
         | MassReply =>
           open Utils
+          let filteredConversations = conversations->Array.filter(conversation => element_in_list(conversation.id, state.selected_conversations));
           <MassReply
-            conversations={state.conversations->Array.filter((c: conversation) =>
-              element_in_list(c.id, state.selected_conversations)
-            )}
+            conversations=filteredConversations
             onMassReplySent={(conversations, message_text, attachments, cbFunc) =>
               send(SendMassReply(conversations, message_text, attachments, cbFunc))}
           />
