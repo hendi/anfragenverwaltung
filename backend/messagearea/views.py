@@ -93,8 +93,8 @@ class MessageListForConversation(View, JSONResponseMixin):
         IncomingMessage.objects.filter(conversation=conversation).update(is_read=True)
 
         # same for Conversation
-        conversation.is_read = True
-        conversation.save(update_fields=["is_read"])
+        #conversation.is_read = True
+        #conversation.save(update_fields=["is_read"])
 
         messages = [
             {
@@ -201,7 +201,6 @@ class ChangeConversation(CsrfExemptMixin, View, JSONResponseMixin):
         if "notes" in data:
             conversation.notes = data["notes"].strip()
             conversation.save(update_fields=["notes"])
-
 
         return self.render_json_response(conversation.to_json())
 

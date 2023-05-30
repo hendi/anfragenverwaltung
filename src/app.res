@@ -606,8 +606,10 @@ let make = (~immobilieId: int) => {
             activeFolder,
           )}
           selectedConversations=state.selected_conversations
-          onConversationClick={(conversation: conversation) =>
+          onConversationClick={(conversation: conversation) => {
+            onReadStatus(conversation,true)
             send(ShowRoute(Route.Conversation(conversation.id)))}
+          }
           onFilterTextChange={event =>
             send(FilterTextChanged((event->ReactEvent.Form.target)["value"]))}
           onRating
