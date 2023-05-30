@@ -26,7 +26,7 @@ let make = (
   <div>
     <div>
       {if folder != Trash {
-        <div>
+        <div className="flex flex-row justify-between items-center">
           {
             let (text, selected) = if (
               List.length(selectedConversations) == Array.length(conversations)
@@ -35,18 +35,18 @@ let make = (
             } else {
               (`Alle auswählen`, true)
             }
-            <button className="btn" onClick={_evt => onToggleSelectAll(selected)}>
+            <button className="flex flex-col items-center justify-center" onClick={_evt => onToggleSelectAll(selected)}>
               <i className="icon-check" />
               {text->React.string}
             </button>
           }
           <button
-            className="btn" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
+            className="flex flex-col items-center justify-center" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
             <i className="icon-mail-reply-all" />
             {"Sammelantwort"->React.string}
           </button>
           <button
-            className="btn pull-right"
+            className="flex flex-col items-center justify-center"
             disabled={List.length(selectedConversations) == 0}
             onClick={_evt => onMassTrash()}>
             <i className="icon-trash" />
@@ -57,13 +57,13 @@ let make = (
         React.null
       }}
       <input
-        className="search"
+        className="w-full p-2"
         type_="search"
         placeholder={`Nach Name, E-Mail, Telefon suchen …`}
         onChange=onFilterTextChange
       />
     </div>
-    <div className="list space-y-2 scrollable">
+    <div className="list space-y-2 overflow-y-scroll">
       {if loading {
         <p className="loadingState">
           {"Bitte warten, die Nachrichten werden geladen …"->React.string}
@@ -89,7 +89,7 @@ let make = (
         })
         ->React.array
       } else {
-        <p className="emptyState">
+        <p className="w-full">
           {
             if hasAnyConversations {
               "Es sind noch keine Nachrichten eingegangen."
