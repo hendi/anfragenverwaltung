@@ -7,8 +7,8 @@ open ConversationData
 @react.component
 let make = (~conversation as _: conversation) => {
     <div className="ConversationPrinter">
-      <span className="btn" onClick={_event => print()}>
-        <i className="icon-print" title="Unterhaltung drucken" /> {"Drucken"->React.string}
+      <span onClick={_event => print()}>
+        <i className="icon-print mr-1" title="Unterhaltung drucken" /> {"Drucken"->React.string}
       </span>
     </div>
 }

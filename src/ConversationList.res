@@ -57,7 +57,7 @@ let make = (
         React.null
       }}
       <input
-        className="w-full p-2"
+        className="w-full p-2 mb-2"
         type_="search"
         placeholder={`Nach Name, E-Mail, Telefon suchen …`}
         onChange=onFilterTextChange

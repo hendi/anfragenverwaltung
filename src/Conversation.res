@@ -12,13 +12,13 @@ module TrashButton = {
   let make = (~onClick, ~isInTrash: bool) => {
     <button className="ConversationTrasher" onClick>
       {if isInTrash {
-        <span className="btn">
-          <i className="icon-undo" />
+        <span>
+          <i className="icon-undo mr-1" />
           {"Wiederherstellen"->React.string}
         </span>
       } else {
-        <span className="btn">
-          <i className="icon-trash" />
+        <span>
+          <i className="icon-trash mr-1" />
           {`Löschen`->React.string}
         </span>
       }}
@@ -73,20 +73,25 @@ let make = (
   <div
     className={Array.joinWith(
       [
-        "Conversation",
         "flex flex-col h-full",
-        switch conversation.rating {
-        | Green => "rating-green"
-        | Yellow => "rating-yellow"
-        | Red => "rating-red"
-        | Unrated => "rating-unrated"
-        },
         conversation.is_in_trash ? "is_in_trash" : "",
       ],
       " ",
     )}>
-    <div className="header">
-      <div className="pull-right" style={ReactDOM.Style.make(~paddingTop="2px", ())}>
+    <div>
+      <div className={Array.joinWith([
+        "flex flex-row items-center justify-between py-2",
+        switch conversation.rating {
+        | Green => "bg-gradient-to-b from-green-100 to-slate-50"
+        | Yellow => "bg-gradient-to-b from-yellow-100 to-slate-50"
+        | Red => "bg-gradient-to-b from-red-100 to-slate-50"
+        | Unrated => ""
+        },
+      ],
+      " ",)}
+      >
+        <h2 className="text-xl font-semibold"> {conversation.name->React.string} </h2>
+        <div className="flex flex-row gap-2 cursor-pointer">
         <ConversationPrinter conversation />
         <ConversationReadStatus conversation onReadStatus />
         <TrashButton
@@ -96,47 +101,50 @@ let make = (
           }}
         />
         <ConversationRater conversation onRating />
-      </div>
-      <h2> {conversation.name->React.string} </h2>
-      <span>
-        <strong> {"E-Mail: "->React.string} </strong>
-        {conversation.email->React.string}
-      </span>
-      {switch conversation.phone {
-      | Some("") => React.null
-      | Some(phone) =>
-        <span>
-          <strong> {"Telefon: "->React.string} </strong>
-          {phone->React.string}
-        </span>
-      | None => React.null
-      }}
-      {switch (conversation.street, conversation.zipcode, conversation.city) {
-      | (Some(""), Some(""), _) => React.null
-      | (Some(""), Some(zipcode), Some(city)) =>
-        <span>
-          <strong> {"Adresse: "->React.string} </strong>
-          {`${zipcode} ${city}`->React.string}
-        </span>
-      | (Some(street), Some(zipcode), Some(city)) =>
-        <span>
-          <strong> {"Adresse: "->React.string} </strong>
-          {`${street}, ${zipcode} ${city})`->React.string}
-        </span>
-      | _ => React.null
-      }}
-      <span>
-        <strong> {"Via: "->React.string} </strong>
-        {conversation.source->React.string}
-      </span>
-      {if String.length(state.notes) > 0 {
-        <div className="hidden-unless-print">
-          <strong> {"Private Notizen: "->React.string} </strong>
-          <p className="nl2br"> {state.notes->React.string} </p>
         </div>
-      } else {
-        React.null
-      }}
+      </div>
+      
+      <div className="space-x-2">
+        <span>
+          <strong> {"E-Mail: "->React.string} </strong>
+          {conversation.email->React.string}
+        </span>
+        {switch conversation.phone {
+        | Some("") => React.null
+        | Some(phone) =>
+          <span>
+            <strong> {"Telefon: "->React.string} </strong>
+            {phone->React.string}
+          </span>
+        | None => React.null
+        }}
+        {switch (conversation.street, conversation.zipcode, conversation.city) {
+        | (Some(""), Some(""), _) => React.null
+        | (Some(""), Some(zipcode), Some(city)) =>
+          <span>
+            <strong> {"Adresse: "->React.string} </strong>
+            {`${zipcode} ${city}`->React.string}
+          </span>
+        | (Some(street), Some(zipcode), Some(city)) =>
+          <span>
+            <strong> {"Adresse: "->React.string} </strong>
+            {`${street}, ${zipcode} ${city})`->React.string}
+          </span>
+        | _ => React.null
+        }}
+        <span>
+          <strong> {"Via: "->React.string} </strong>
+          {conversation.source->React.string}
+        </span>
+        {if String.length(state.notes) > 0 {
+          <div className="hidden-unless-print">
+            <strong> {"Private Notizen: "->React.string} </strong>
+            <p className="nl2br"> {state.notes->React.string} </p>
+          </div>
+        } else {
+          React.null
+        }}
+      </div>
       <div className="notes hidden-on-print">
         <a onClick={_event => send(ToggleNotes)}>
           <i className={state.show_notes ? "icon-caret-down" : "icon-caret-right"} />

@@ -11,12 +11,12 @@ let make = (~conversation, ~onReadStatus: (conversation, bool) => unit) => {
 
   <div className="ConversationReadStatus">
     {if conversation.is_read && !conversation.is_in_trash {
-      <span className="btn" onClick title="Als ungelesen markieren">
-        <i className="icon-check" /> {"Gelesen"->React.string}
+      <span onClick title="Als ungelesen markieren">
+        <i className="icon-check mr-1" /> {"Gelesen"->React.string}
       </span>
     } else {
-      <span className="btn" onClick title="Als gelesen markieren">
-        <i className="icon-check-empty" /> {"Gelesen"->React.string}
+      <span onClick title="Als gelesen markieren">
+        <i className="icon-check-empty mr-1" /> {"Gelesen"->React.string}
       </span>
     }}
   </div>
