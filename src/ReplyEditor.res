@@ -30,7 +30,7 @@ let make = (
     switch action {
     | SendReply =>
       ReactUpdate.UpdateWithSideEffects(
-        {...state, message_text: ""},
+        {...state, message_text: "", message_sent: true},
         _self => {
           let attachments = switch filepondRef.current {
           | Some(filepond) => {
@@ -64,7 +64,7 @@ let make = (
   <div className="space-y-4 ml-20">
     <h2 className="text-xl font-semibold text-blue-500"> {"Antwort schreiben:"->React.string} </h2>
     {if state.message_sent {
-      <div className="bg-green-300">
+      <div className="bg-green-100 text-green-700 rounded p-2">
         {"Ihre Nachricht wurde erfolgreich verschickt."->React.string}
       </div>
     } else {
@@ -72,7 +72,7 @@ let make = (
     }}
     <div className={state.message_sent ? "hidden" : ""}>
       <textarea
-        className="w-full rounded p-2"
+        className="w-full rounded p-2 mb-2"
         rows=4
         value=state.message_text
         onChange={event => send(MessageTextChanged((event->ReactEvent.Form.target)["value"]))}
