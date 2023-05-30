@@ -34,9 +34,8 @@ let make = (
     ]->Js.Array2.joinWith(" ")}
     >
     <div className="flex w-full justify-between">
-      <div className="">
+      <div className="flex flex-row gap-2 items-center">
         <input
-          className="toggle"
           type_="checkbox"
           checked=selected
           onChange={_evt => onToggleSelect(conversation)}
@@ -45,15 +44,11 @@ let make = (
           {conversation.name->React.string}
         </span>
       </div>
-      <div className="pull-right">
-        <ConversationRater conversation onRating />
+      <div className="flex flex-row items-center space-x-1">
         {if (
-          /* if (! conversation.is_read) {
-                    <i className="icon-asterisk" title="Ungelesen" />;
-                } else */
           conversation.is_replied_to
         ) {
-          <i className="icon-reply" title="Beantwortet" />
+          <i className="icon-reply text-[#236ea2]" title="Beantwortet" />
         } else {
           React.null
         }}
@@ -67,9 +62,10 @@ let make = (
         } else {
           React.null
         }}
+        <ConversationRater conversation onRating />
       </div>
     </div>
-    <div className="info">
+    <div className="flex flex-row">
       <div className="inline-block mt-1 text-xs">
         <IsoDate date={Js.Date.fromString(conversation.date_last_message)} />
         {" um "->React.string}

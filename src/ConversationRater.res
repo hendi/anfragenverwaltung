@@ -6,20 +6,20 @@ module RateButton = {
   type icon = [#"icon-thumbs-up-alt" | #"icon-unchecked" | #"icon-thumbs-down-alt"]
   @react.component
   let make = (~active=false, ~icon: icon, ~title: string, ~onClick: ReactEvent.Mouse.t => unit) => {
-    let borderColor = active ? "border-black" : "border-transparent"
+    let fontWeight = active ? "font-bold" : "font-normal"
 
     <button
       onClick
       title
-      className={`w-6 h-6 bg-gray-200 ${borderColor} border-2 hover:border-black rounded-md inline-flex justify-center items-center`}>
-      <i className={(icon :> string)} />
+      className={`w-6 h-6 inline-flex justify-center items-center`}>
+      <i className={`${fontWeight} hover:font-bold ${(icon :> string)}`} />
     </button>
   }
 }
 
 @react.component
 let make = (~conversation, ~onRating) => {
-  <div className="space-x-1">
+  <div>
     <RateButton
       icon=#"icon-thumbs-up-alt"
       onClick={evt => onRating(conversation, conversation.rating === Green ? Unrated : Green, evt)}
