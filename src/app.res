@@ -586,13 +586,13 @@ let make = (~immobilieId: int) => {
 
   <div>
     <ReactQueryDevtools position=#"bottom-right" />
-    <div className="flex">
+    <div className="grid grid-cols-12 gap-4">
       <FolderNavigation
         onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
         activeFolder
         conversations
       />
-      <div className="ConversationListView" ref={ReactDOM.Ref.domRef(mainRef)}>
+      <div className="col-span-3" ref={ReactDOM.Ref.domRef(mainRef)}>
         <ConversationList
           folder=activeFolder
           loading={conversationsQuery == Loading}
@@ -622,7 +622,7 @@ let make = (~immobilieId: int) => {
           hasAnyConversations={Array.length(state.conversations) > 0}
         />
       </div>
-      <div className="MessageListView">
+      <div className="col-span-7">
         {switch route {
         | Unknown404 => <div> {React.string("404 not found")} </div>
         | Conversation(_id) =>

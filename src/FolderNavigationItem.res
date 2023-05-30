@@ -15,7 +15,7 @@ let make = (
  */
 
   <button
-    className={"flex justify-between py-2 px-4 items-center w-full " ++
+    className={"flex items-center justify-between py-2 px-4 w-full " ++
     ((isActive ? "bg-blue-400 text-white" : "") ++
     (" " ++ (unreadCount > 0 ? "unread" : "")))}
     onClick>
