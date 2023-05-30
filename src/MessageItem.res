@@ -7,15 +7,15 @@ let make = (~message: message) => {
   <div
     className={"border-2 rounded bg-white px-4 py-4 " ++
     switch message.type_ {
-    | Incoming => "is_incoming"
-    | Outgoing => "is_reply"
+    | Incoming => "mr-20"
+    | Outgoing => "ml-20"
     }}>
     <span>
       {if message.type_ == Incoming {
         "Geschrieben am "->React.string
       } else {
         <span>
-          <i className="icon-reply" />
+          <i className="icon-reply text-[#236ea2] mr-1" />
           {"Beantwortet am "->React.string}
         </span>
       }}
