@@ -50,7 +50,7 @@ type rec conversation = {
 and message = {
   id: int,
   conversation_id: int,
-  message_type: message_type,
+  @as("type") type_: message_type,
   content: string,
   date: string,
   attachments: array<attachment>,

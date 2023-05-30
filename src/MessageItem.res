@@ -6,12 +6,12 @@ open ConversationData
 let make = (~message: message) => {
   <div
     className={"border-2 rounded bg-white px-4 py-4 " ++
-    switch message.message_type {
+    switch message.type_ {
     | Incoming => "is_incoming"
     | Outgoing => "is_reply"
     }}>
     <span>
-      {if message.message_type == Incoming {
+      {if message.type_ == Incoming {
         "Geschrieben am "->React.string
       } else {
         <span>
