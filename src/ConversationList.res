@@ -23,8 +23,8 @@ let make = (
   ~hasAnyConversations,
   ~isFiltered,
 ) => {
-  <div className="ConversationList">
-    <div className="header">
+  <div>
+    <div>
       {if folder != Trash {
         <div>
           {

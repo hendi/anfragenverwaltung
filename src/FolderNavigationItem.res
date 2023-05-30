@@ -16,7 +16,7 @@ let make = (
 
   <button
     className={"flex items-center justify-between py-2 px-4 w-full " ++
-    ((isActive ? "bg-blue-400 text-white" : "") ++
+    ((isActive ? "bg-blue-100 text-blue-500" : "") ++
     (" " ++ (unreadCount > 0 ? "unread" : "")))}
     onClick>
     <span className="space-x-2">
