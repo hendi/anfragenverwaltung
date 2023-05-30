@@ -61,10 +61,10 @@ let make = (
     }
   }, initialState)
 
-  <div className="ReplyEditor">
-    <h2> {"Antwort schreiben:"->React.string} </h2>
+  <div className="space-y-4 ml-20">
+    <h2 className="text-xl font-semibold text-blue-500"> {"Antwort schreiben:"->React.string} </h2>
     {if state.message_sent {
-      <div className="alert alert-success">
+      <div className="bg-green-300">
         {"Ihre Nachricht wurde erfolgreich verschickt."->React.string}
       </div>
     } else {
@@ -72,6 +72,8 @@ let make = (
     }}
     <div className={state.message_sent ? "hidden" : ""}>
       <textarea
+        className="w-full rounded p-2"
+        rows=4
         value=state.message_text
         onChange={event => send(MessageTextChanged((event->ReactEvent.Form.target)["value"]))}
       />
@@ -112,8 +114,15 @@ let make = (
         maxTotalFileSize="10MB"
         server={ConversationData.apiBaseUrl ++ "/anfragen/upload_attachment"}
       />
+      <div className="flex flex-row justify-end space-x-4">
+       <button
+        className="bg-slate-50 border border-slate-200 rounded p-2"
+        onClick=onIgnoreConversation
+        disabled=conversation.is_ignored>
+        {"Keine Antwort nötig"->React.string}
+      </button>
       <button
-        className="btn-send btn btn-primary pull-right"
+        className="bg-blue-500 text-white rounded p-2"
         disabled={String.length(state.message_text) == 0}
         /* || state.uploads_in_progress != 0 */
         onClick={_evt => {
@@ -121,12 +130,7 @@ let make = (
         }}>
         {"Antwort senden"->React.string}
       </button>
-      <button
-        className="btn-ignore btn pull-right"
-        onClick=onIgnoreConversation
-        disabled=conversation.is_ignored>
-        {"Keine Antwort nötig"->React.string}
-      </button>
+      </div>
     </div>
   </div>
 }
