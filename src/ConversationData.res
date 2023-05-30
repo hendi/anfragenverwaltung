@@ -8,7 +8,7 @@ type rating =
   | @as("green") Green
   | @as("yellow") Yellow
   | @as("red") Red
-  | Unrated
+  | @as("") Unrated
 
 module Folder = {
   type t =
