@@ -46,7 +46,7 @@ def reply_to_conversation(immobilie_id, conversation_id, message_text):
     return {
         "conversation_id": conversation.id,
         "id": message.id,
-        "type": "outgoing",
+        "message_type": "outgoing",
         "content": message.message,
         "date": message.date_sent,
         "attachments": [],
@@ -100,7 +100,7 @@ class MessageListForConversation(View, JSONResponseMixin):
             {
                 "id": x.id,
                 "conversation_id": conversation.id,
-                "type": x.type,
+                "message_type": x.type,
                 "content": x.message,
                 "date": x.date_sent,
                 "attachments": []

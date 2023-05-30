@@ -20,9 +20,9 @@ module Folder = {
     | Trash
 }
 
-type type_ =
-  | Incoming
-  | Outgoing
+type message_type =
+  | @as("incoming") Incoming
+  | @as("outgoing") Outgoing
 
 @@warning("-30")
 type rec conversation = {
@@ -50,7 +50,7 @@ type rec conversation = {
 and message = {
   id: int,
   conversation_id: int,
-  type_: type_,
+  message_type: message_type,
   content: string,
   date: string,
   attachments: array<attachment>,
@@ -62,6 +62,7 @@ and attachment = {
 }
 
 module Decode = {
+
   /** Unsafely coerces a backend json payload for a conversation. */
   external single_conversation: Js.Json.t => conversation = "%identity"
 
