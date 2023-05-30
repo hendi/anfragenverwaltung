@@ -550,7 +550,6 @@ let make = (~immobilieId: int) => {
   React.useEffect1(() => {
     switch currentConversation {
     | Some(currentConversation) =>
-      Js.log2("Current Conversation:", currentConversation)
       send(UpdateInteractedList(currentConversation.id))
     | None => ()
     }
@@ -558,7 +557,6 @@ let make = (~immobilieId: int) => {
   }, [currentConversation])
 
   React.useEffect1(() => {
-    Js.log2("Folder change to", activeFolder)
     send(ResetInteractedList(list{}))
     None
   }, [activeFolder])
