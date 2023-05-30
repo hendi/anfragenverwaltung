@@ -77,7 +77,7 @@ let make = (
             conversation
             selected={element_in_list(conversation.id, selectedConversations)}
             active
-            onClick={evt => {
+            onClick={_evt => {
               // don't reload messages if this conversation is currently selected
               if !active {
                 onConversationClick(conversation)

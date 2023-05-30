@@ -1,7 +1,5 @@
 /* %%raw(`import './MessageItem.css'`) */
 
-open Utils
-
 open ConversationData
 
 @react.component
@@ -14,19 +12,19 @@ let make = (~message: message) => {
     }}>
     <span>
       {if message.type_ == Incoming {
-        textEl("Geschrieben am ")
+        "Geschrieben am "->React.string
       } else {
         <span>
           <i className="icon-reply" />
-          {textEl("Beantwortet am ")}
+          {"Beantwortet am "->React.string}
         </span>
       }}
       <IsoDate date={Js.Date.fromString(message.date)} />
-      {textEl(" um ")}
+      {" um "->React.string}
       <IsoTime date={Js.Date.fromString(message.date)} />
     </span>
     <hr />
-    <p> {textEl(message.content)} </p>
+    <p> {message.content->React.string} </p>
     {if Array.length(message.attachments) > 0 {
       <div>
         <b> {"Anhänge"->React.string} </b>

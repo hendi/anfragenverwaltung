@@ -1,7 +1,5 @@
 /* %%raw(`import './FolderNavigationItem.css'`) */
 
-open Utils
-
 @react.component
 let make = (
   ~isActive: bool=false,
@@ -23,7 +21,7 @@ let make = (
     onClick>
     <span className="space-x-2">
       <span className="inline-block w-4"> <i className={"main-icon " ++ icon} /> </span>
-      <span> {textEl(label)} </span>
+      <span> {label->React.string} </span>
     </span>
     <span className="pl-2"> {` (${count->Belt.Int.toString})`->React.string} </span>
   </button>

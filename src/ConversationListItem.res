@@ -39,10 +39,10 @@ let make = (
           className="toggle"
           type_="checkbox"
           checked=selected
-          onChange={evt => onToggleSelect(conversation)}
+          onChange={_evt => onToggleSelect(conversation)}
         />
         <span className="font-bold text-base pointer">
-          {textEl(conversation.name)}
+          {conversation.name->React.string}
         </span>
       </div>
       <div className="pull-right">
@@ -72,7 +72,7 @@ let make = (
     <div className="info">
       <div className="inline-block mt-1 text-xs">
         <IsoDate date={Js.Date.fromString(conversation.date_last_message)} />
-        {textEl(" um ")}
+        {" um "->React.string}
         <IsoTime date={Js.Date.fromString(conversation.date_last_message)} />
       </div>
     </div>
@@ -80,11 +80,11 @@ let make = (
       <div>
         {if conversation.latest_message.type_ == Outgoing {
           <em>
-            {textEl("Ihre Antwort: ")}
-            {textEl(conversation.latest_message.content->max_length(20, 200))}
+            {"Ihre Antwort: "->React.string}
+            {conversation.latest_message.content->max_length(20, 200)->React.string}
           </em>
         } else {
-          <span> {textEl(conversation.latest_message.content->max_length(20, 200))} </span>
+          <span> {conversation.latest_message.content->max_length(20, 200)->React.string} </span>
         }}
       </div>
     </div>

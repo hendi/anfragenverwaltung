@@ -1,7 +1,5 @@
 /* %%raw(`import './ReplyEditor.css'`) */
 
-open Utils
-
 type state = {
   message_text: string,
   uploads_in_progress: int,
@@ -64,10 +62,10 @@ let make = (
   }, initialState)
 
   <div className="ReplyEditor">
-    <h2> {textEl("Antwort schreiben:")} </h2>
+    <h2> {"Antwort schreiben:"->React.string} </h2>
     {if state.message_sent {
       <div className="alert alert-success">
-        {textEl("Ihre Nachricht wurde erfolgreich verschickt.")}
+        {"Ihre Nachricht wurde erfolgreich verschickt."->React.string}
       </div>
     } else {
       React.null
@@ -121,13 +119,13 @@ let make = (
         onClick={_evt => {
           send(SendReply)
         }}>
-        {textEl("Antwort senden")}
+        {"Antwort senden"->React.string}
       </button>
       <button
         className="btn-ignore btn pull-right"
         onClick=onIgnoreConversation
         disabled=conversation.is_ignored>
-        {textEl(`Keine Antwort nötig`)}
+        {"Keine Antwort nötig"->React.string}
       </button>
     </div>
   </div>

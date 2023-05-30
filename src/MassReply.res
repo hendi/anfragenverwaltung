@@ -1,7 +1,5 @@
 /* %%raw(`import './MassReply.css'`) */
 
-open Utils
-
 open ConversationData
 
 type state = {
@@ -67,13 +65,13 @@ let make = (~conversations, ~onMassReplySent) => {
   , initialState)
 
   <div className="MassReply">
-    <h2> {textEl("Sammelantwort schreiben")} </h2>
+    <h2> {"Sammelantwort schreiben"->React.string} </h2>
     <p className="info">
-      {textEl(`Hinweis: Die Empänger der Nachricht sehen nicht, dass es sich um eine Sammelantwort handelt.`)}
+      {"Hinweis: Die Empänger der Nachricht sehen nicht, dass es sich um eine Sammelantwort handelt."->React.string}
     </p>
     <div className="recipient-list">
       <div>
-        <strong> {textEl(`Empfänger:`)} </strong>
+        <strong> {"Empfänger:"->React.string} </strong>
       </div>
       {conversations
       ->Array.map((conversation: conversation) =>
@@ -86,7 +84,7 @@ let make = (~conversations, ~onMassReplySent) => {
     </div>
     {if state.sent {
       <div className="alert alert-success">
-        {textEl("Ihre Sammelantwort wurde erfolgreich verschickt.")}
+        {"Ihre Sammelantwort wurde erfolgreich verschickt."->React.string}
       </div>
     } else {
       React.null
@@ -123,13 +121,13 @@ let make = (~conversations, ~onMassReplySent) => {
         className="btn-send btn btn-primary pull-right"
         onClick={_event => send(SendMessage)}
         disabled={String.length(state.message_text) == 0 || (state.sending || state.sent)}>
-        {textEl(
+        {
           switch (state.sending, state.sent) {
           | (false, false) => "Antwort senden"
           | (true, false) => "Wird gesendet..."
           | (_, true) => "Sammelantwort wurde verschickt"
-          },
-        )}
+          }->React.string
+        }
       </button>
     </div>
   </div>
