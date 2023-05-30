@@ -37,20 +37,20 @@ let make = (
             }
             <button className="btn" onClick={_evt => onToggleSelectAll(selected)}>
               <i className="icon-check" />
-              {textEl(text)}
+              {text->React.string}
             </button>
           }
           <button
             className="btn" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
             <i className="icon-mail-reply-all" />
-            {textEl("Sammelantwort")}
+            {"Sammelantwort"->React.string}
           </button>
           <button
             className="btn pull-right"
             disabled={List.length(selectedConversations) == 0}
             onClick={_evt => onMassTrash()}>
             <i className="icon-trash" />
-            {textEl(`Löschen`)}
+            {"Löschen"->React.string}
           </button>
         </div>
       } else {
@@ -66,7 +66,7 @@ let make = (
     <div className="list space-y-2 scrollable">
       {if loading {
         <p className="loadingState">
-          {textEl(`Bitte warten, die Nachrichten werden geladen …`)}
+          {"Bitte warten, die Nachrichten werden geladen …"->React.string}
         </p>
       } else if Array.length(conversations) > 0 {
         conversations
@@ -90,8 +90,8 @@ let make = (
         ->React.array
       } else {
         <p className="emptyState">
-          {textEl(
-            if !hasAnyConversations {
+          {
+            if hasAnyConversations {
               "Es sind noch keine Nachrichten eingegangen."
             } else if isFiltered {
               "Ihre Suche lieferte keine Ergebnisse."
@@ -101,8 +101,8 @@ let make = (
               | Trash => "Der Papierkorb ist leer."
               | _ => "In diesem Ordner befinden sich keine Nachrichten."
               }
-            },
-          )}
+            }->React.string
+          }
         </p>
       }}
     </div>
