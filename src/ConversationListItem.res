@@ -78,7 +78,7 @@ let make = (
     </div>
     <div>
       <div>
-        {if conversation.latest_message.message_type == Outgoing {
+        {if conversation.latest_message.type_ == Outgoing {
           <em>
             {"Ihre Antwort: "->React.string}
             {conversation.latest_message.content->max_length(20, 200)->React.string}
