@@ -22,18 +22,18 @@ let make = (~conversation, ~onRating) => {
   <div className="space-x-1">
     <RateButton
       icon=#"icon-thumbs-up-alt"
-      onClick={evt => onRating(conversation, Green, evt)}
+      onClick={evt => onRating(conversation, conversation.rating === Green ? Unrated : Green, evt)}
       title="Als Favoriten markieren"
       active={conversation.rating == Green}
     />
     <RateButton
       icon=#"icon-unchecked"
-      onClick={evt => onRating(conversation, Yellow, evt)}
+      onClick={evt => onRating(conversation, conversation.rating === Yellow ? Unrated : Yellow, evt)}
       title="Als Vielleicht markieren"
       active={conversation.rating == Yellow}
     />
     <RateButton
-      onClick={evt => onRating(conversation, Red, evt)}
+      onClick={evt => onRating(conversation, conversation.rating === Red ? Unrated : Red, evt)}
       icon=#"icon-thumbs-down-alt"
       title="Als Uninteressant markieren"
       active={conversation.rating == Red}
