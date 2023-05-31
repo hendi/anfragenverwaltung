@@ -41,12 +41,12 @@ let make = (
             </button>
           }
           <button
-            className="flex flex-col items-center justify-center" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
+            className="flex flex-col items-center justify-center disabled:text-gray-500 disabled:cursor-not-allowed" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
             <i className="icon-mail-reply-all" />
             {"Sammelantwort"->React.string}
           </button>
           <button
-            className="flex flex-col items-center justify-center"
+            className="flex flex-col items-center justify-center disabled:text-gray-500 disabled:cursor-not-allowed"
             disabled={List.length(selectedConversations) == 0}
             onClick={_evt => onMassTrash()}>
             <i className="icon-trash" />
