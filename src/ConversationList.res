@@ -35,18 +35,18 @@ let make = (
             } else {
               (`Alle auswählen`, true)
             }
-            <button className="flex flex-col items-center justify-center" onClick={_evt => onToggleSelectAll(selected)}>
+            <button className="flex flex-col items-center justify-center hover:bg-blue-200 px-2 hover:disabled:bg-transparent" onClick={_evt => onToggleSelectAll(selected)}>
               <i className="icon-check" />
               {text->React.string}
             </button>
           }
           <button
-            className="flex flex-col items-center justify-center disabled:text-gray-500 disabled:cursor-not-allowed" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
+            className="flex flex-col items-center hover:bg-blue-200 px-2 hover:disabled:bg-transparent justify-center disabled:text-gray-500 disabled:cursor-not-allowed" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
             <i className="icon-mail-reply-all" />
             {"Sammelantwort"->React.string}
           </button>
           <button
-            className="flex flex-col items-center justify-center disabled:text-gray-500 disabled:cursor-not-allowed"
+            className="flex flex-col items-center justify-center hover:bg-blue-200 px-2 hover:disabled:bg-transparent disabled:text-gray-500 disabled:cursor-not-allowed"
             disabled={List.length(selectedConversations) == 0}
             onClick={_evt => onMassTrash()}>
             <i className="icon-trash" />
