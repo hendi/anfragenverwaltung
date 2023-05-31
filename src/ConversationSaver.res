@@ -1,9 +1,7 @@
-%raw(`require('./ConversationSaver.css')`)
-
 open ConversationData
 
 let make = (~conversation: conversation, _children) => {
-  <div className="ConversationSaver">
+  <div>
     <a
       href={"https://www.ohne-makler.net/anfragen/immobilie/" ++
       (Belt.Int.toString(conversation.immobilie_id) ++

@@ -1,5 +1,3 @@
-/* %%raw(`import './Conversation.css'`) */
-
 open ConversationData
 
 type state = {
@@ -74,13 +72,13 @@ let make = (
     className={Array.joinWith(
       [
         "flex flex-col h-full",
-        conversation.is_in_trash ? "is_in_trash" : "",
+        conversation.is_in_trash ? "text-gray-500" : "",
       ],
       " ",
     )}>
     <div>
       <div className={Array.joinWith([
-        "flex flex-row items-center justify-between py-2 px-2",
+        "flex flex-row items-center justify-between py-2 px-2 text-black",
         switch conversation.rating {
         | Green => "bg-gradient-to-b from-green-100 to-slate-50"
         | Yellow => "bg-gradient-to-b from-yellow-100 to-slate-50"

@@ -1,5 +1,3 @@
-/* %%raw(`import './ReplyEditor.css'`) */
-
 type state = {
   messageText: string,
   uploadsInProgress: int,

@@ -1,5 +1,3 @@
-/* %%raw(`import './MassReply.css'`) */
-
 open ConversationData
 
 type state = {
@@ -66,7 +64,7 @@ let make = (~conversations, ~onMassReplySent) => {
 
   <div>
     <h2 className="text-xl font-semibold"> {"Sammelantwort schreiben"->React.string} </h2>
-    <p className="info">
+    <p>
       {"Hinweis: Die Empänger der Nachricht sehen nicht, dass es sich um eine Sammelantwort handelt."->React.string}
     </p>
     <div className="flex flex-col space-y-2 mb-4">

@@ -66,7 +66,7 @@ let make = (
           <ConversationListItem
             key={string_of_int(conversation.id)}
             conversation
-            selected={element_in_list(conversation.id, selectedConversations)}
+            selected={elementInList(conversation.id, selectedConversations)}
             active
             onClick={_evt => {
               if !active {

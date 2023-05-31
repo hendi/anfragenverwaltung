@@ -1,7 +1,4 @@
-/* %%raw(`import './ConversationListItem.css'`) */
-
 open Utils
-
 open ConversationData
 
 @react.component
@@ -28,7 +25,7 @@ let make = (
   ?onClick
   className={[
       "cursor-pointer p-2",
-      conversation.is_in_trash ? "bg-purple-100" : bgColor,
+      conversation.is_in_trash ? `text-gray-500 ${active ? "bg-blue-100" : "" }` : bgColor,
       selected ? "selected" : "",
       !conversation.is_read ? "unread" : "",
     ]->Js.Array2.joinWith(" ")}
@@ -44,7 +41,7 @@ let make = (
             onToggleSelect(conversation)
           }}
         />
-        <span className="font-bold text-base pointer">
+        <span className="font-bold text-base">
           {conversation.name->React.string}
         </span>
       </div>
@@ -81,10 +78,10 @@ let make = (
         {if conversation.latest_message.type_ == Outgoing {
           <em>
             {"Ihre Antwort: "->React.string}
-            {conversation.latest_message.content->max_length(20, 200)->React.string}
+            {conversation.latest_message.content->maxLength(20, 200)->React.string}
           </em>
         } else {
-          <span> {conversation.latest_message.content->max_length(20, 200)->React.string} </span>
+          <span> {conversation.latest_message.content->maxLength(20, 200)->React.string} </span>
         }}
       </div>
     </div>

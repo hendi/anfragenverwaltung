@@ -1,5 +1,3 @@
-/* %%raw(`import './ConversationRater.css'`) */
-
 open ConversationData
 
 module RateButton = {

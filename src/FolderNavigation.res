@@ -1,5 +1,3 @@
-/*%%raw(`import './FolderNavigation.css'`)*/
-
 open ConversationData
 
 type item = {

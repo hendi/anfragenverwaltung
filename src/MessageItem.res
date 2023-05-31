@@ -1,5 +1,3 @@
-/* %%raw(`import './MessageItem.css'`) */
-
 open ConversationData
 
 @react.component
@@ -27,7 +25,7 @@ let make = (~message: message) => {
     <p> {message.content->React.string} </p>
     {if Array.length(message.attachments) > 0 {
       <div>
-        <b> {"Anhänge"->React.string} </b>
+        <strong> {"Anhänge"->React.string} </strong>
         <ul>
           {message.attachments
           ->Array.map((attachment: attachment) =>

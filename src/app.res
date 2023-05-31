@@ -17,14 +17,14 @@ let filterConversations = (
             true
           } else {
             open Utils
-            string_contains(String.toLowerCase(c.name), filterText) ||
-            (string_contains(String.toLowerCase(c.email), filterText) ||
-            (string_contains(String.toLowerCase(c.phone->getWithDefault("")), filterText) ||
-            (string_contains(String.toLowerCase(c.city->getWithDefault("")), filterText) ||
-            (string_contains(String.toLowerCase(c.zipcode->getWithDefault("")), filterText) ||
-            (string_contains(String.toLowerCase(c.street->getWithDefault("")), filterText) ||
-            (string_contains(String.toLowerCase(c.latest_message.content), filterText) ||
-            string_contains(c.notes, filterText)))))))
+            stringContains(String.toLowerCase(c.name), filterText) ||
+            (stringContains(String.toLowerCase(c.email), filterText) ||
+            (stringContains(String.toLowerCase(c.phone->getWithDefault("")), filterText) ||
+            (stringContains(String.toLowerCase(c.city->getWithDefault("")), filterText) ||
+            (stringContains(String.toLowerCase(c.zipcode->getWithDefault("")), filterText) ||
+            (stringContains(String.toLowerCase(c.street->getWithDefault("")), filterText) ||
+            (stringContains(String.toLowerCase(c.latest_message.content), filterText) ||
+            stringContains(c.notes, filterText)))))))
           }
         )
 
@@ -652,7 +652,7 @@ let make = (~immobilieId: int) => {
           }
         | MassReply =>
           open Utils
-          let filteredConversations = conversations->Array.filter(conversation => element_in_list(conversation.id, state.selected_conversations));
+          let filteredConversations = conversations->Array.filter(conversation => elementInList(conversation.id, state.selected_conversations));
           <MassReply
             conversations=filteredConversations
             onMassReplySent={(conversations, message_text, attachments, cbFunc) =>

@@ -1,5 +1,3 @@
-/*%%raw(`import './ConversationReadStatus.css'`)*/
-
 open ConversationData
 
 @react.component
@@ -9,7 +7,7 @@ let make = (~conversation, ~onReadStatus: (conversation, bool) => unit) => {
     onReadStatus(conversation, !conversation.is_read)
   }
 
-  <div className="ConversationReadStatus">
+  <div>
     {if conversation.is_read && !conversation.is_in_trash {
       <span onClick title="Als ungelesen markieren">
         <i className="icon-check mr-1" /> {"Gelesen"->React.string}
