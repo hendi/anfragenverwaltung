@@ -80,6 +80,7 @@ let make = (
       <Filepond
         ref={pond => filepondRef.current = Some(pond)}
         onprocessfilestart={_ => send(UploadStarted)}
+        labelIdle={`Sie können bis zu 3 Anhänge (jeweils max. 10MB) hochladen <span class="filepond--label-action"> [Dateien auswählen] </span>`}
         onprocessfile={e => {
           let wasSuccessfullyUploaded = %raw(`
            function (resp) {

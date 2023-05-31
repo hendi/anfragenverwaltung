@@ -15,6 +15,7 @@ external make: (
   ~allowFileEncode: bool=?,
   ~maxFileSize: string=?,
   ~maxTotalFileSize: string=?,
+  ~labelIdle: string=?,
   ~server: string=?,
   ~allowMultiple: bool=?,
   ~maxFiles: int=?,
