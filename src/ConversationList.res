@@ -27,19 +27,10 @@ let make = (
     <div>
       {if folder != Trash {
         <div className="flex flex-row justify-between items-center">
-          {
-            let (text, selected) = if (
-              List.length(selectedConversations) == Array.length(conversations)
-            ) {
-              (`Auswahl löschen`, false)
-            } else {
-              (`Alle auswählen`, true)
-            }
-            <button className="flex flex-col items-center justify-center hover:bg-blue-200 px-2 hover:disabled:bg-transparent" onClick={_evt => onToggleSelectAll(selected)}>
-              <i className="icon-check" />
-              {text->React.string}
-            </button>
-          }
+          <button className="flex flex-col items-center justify-center hover:bg-blue-200 px-2 hover:disabled:bg-transparent disabled:text-gray-500 disabled:cursor-not-allowed" disabled={Array.length(conversations) == 0 || List.length(selectedConversations) == Array.length(conversations) }onClick={_evt => onToggleSelectAll(true)}>
+            <i className="icon-check" />
+            {"Alles auswählen"->React.string}
+          </button>
           <button
             className="flex flex-col items-center hover:bg-blue-200 px-2 hover:disabled:bg-transparent justify-center disabled:text-gray-500 disabled:cursor-not-allowed" disabled={List.length(selectedConversations) == 0} onClick=onMassReply>
             <i className="icon-mail-reply-all" />
