@@ -48,17 +48,17 @@ let make = (
         {if (
           conversation.is_replied_to
         ) {
-          <i className="icon-reply text-[#236ea2]" title="Beantwortet" />
+          <i className="icon-reply text-[#236ea2] mr-1" title="Beantwortet" />
         } else {
           React.null
         }}
         {if conversation.has_attachments {
-          <i className="icon-paperclip" title="Dateianhang vorhanden" />
+          <i className="icon-paperclip mr-1" title="Dateianhang vorhanden" />
         } else {
           React.null
         }}
         {if String.length(conversation.notes) > 0 {
-          <i className="icon-comment-alt" title="Notizen vorhanden" />
+          <i className="icon-comment-alt mb-1 mr-1" title="Notizen vorhanden" />
         } else {
           React.null
         }}
