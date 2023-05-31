@@ -26,7 +26,7 @@ let make = (
   <div>
     <div>
       {if folder != Trash {
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-around items-center">
           <button className="flex flex-col items-center justify-center hover:bg-blue-200 px-2 hover:disabled:bg-transparent disabled:text-gray-500 disabled:cursor-not-allowed" disabled={Array.length(conversations) == 0 || List.length(selectedConversations) == Array.length(conversations) }onClick={_evt => onToggleSelectAll(true)}>
             <i className="icon-check" />
             {"Alles auswählen"->React.string}
