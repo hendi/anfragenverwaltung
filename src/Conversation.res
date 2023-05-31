@@ -80,7 +80,7 @@ let make = (
     )}>
     <div>
       <div className={Array.joinWith([
-        "flex flex-row items-center justify-between py-2",
+        "flex flex-row items-center justify-between py-2 px-2",
         switch conversation.rating {
         | Green => "bg-gradient-to-b from-green-100 to-slate-50"
         | Yellow => "bg-gradient-to-b from-yellow-100 to-slate-50"
@@ -91,7 +91,7 @@ let make = (
       " ",)}
       >
         <h2 className="text-xl font-semibold"> {conversation.name->React.string} </h2>
-        <div className="flex flex-row gap-2 cursor-pointer">
+        <div className="flex flex-row gap-2 cursor-pointer print:hidden">
         <ConversationPrinter conversation />
         <ConversationReadStatus conversation onReadStatus />
         <TrashButton
@@ -104,7 +104,7 @@ let make = (
         </div>
       </div>
       
-      <div className="space-x-2">
+      <div className="space-x-2 px-2">
         <span>
           <strong> {"E-Mail: "->React.string} </strong>
           {conversation.email->React.string}
@@ -138,14 +138,14 @@ let make = (
         </span>
       </div>
       {if String.length(state.notes) > 0 {
-          <div className="hidden-unless-print">
+          <div className="hidden px-2 mb-4 print:block">
             <strong> {"Private Notizen: "->React.string} </strong>
             <p> {state.notes->React.string} </p>
           </div>
         } else {
           React.null
       }}
-      <div className="hidden-on-print mb-2">
+      <div className="mb-2 px-2 print:hidden">
         <a className="text-blue-500" onClick={_event => send(ToggleNotes)}>
           <i className={state.show_notes ? "icon-caret-down mr-1" : "icon-caret-right mr-1"} />
           {"Private Notizen"->React.string}
@@ -175,7 +175,7 @@ let make = (
       </div>
     </div>
     // main area
-    <div className="overflow-y-auto h-screen" ref={ReactDOM.Ref.domRef(scrollableRef)}>
+    <div className="overflow-y-auto h-screen print:h-full" ref={ReactDOM.Ref.domRef(scrollableRef)}>
       <div className="space-y-3 mb-12">
         {if loading {
           <p> {"Nachrichten werden geladen..."->React.string} </p>

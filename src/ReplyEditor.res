@@ -61,7 +61,7 @@ let make = (
     }
   }, initialState)
 
-  <div className="space-y-4 ml-20">
+  <div className="space-y-4 ml-20 print:hidden">
     <h2 className="text-xl font-semibold text-blue-500"> {"Antwort schreiben:"->React.string} </h2>
     {if state.message_sent {
       <div className="bg-green-100 text-green-700 rounded p-2">
