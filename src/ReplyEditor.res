@@ -1,9 +1,9 @@
 /* %%raw(`import './ReplyEditor.css'`) */
 
 type state = {
-  message_text: string,
-  uploads_in_progress: int,
-  message_sent: bool,
+  messageText: string,
+  uploadsInProgress: int,
+  messageSent: bool,
 }
 
 type action =
@@ -19,9 +19,9 @@ let make = (
   ~onIgnoreConversation: ReactEvent.Mouse.t => unit,
 ) => {
   let initialState = {
-    message_text: "",
-    uploads_in_progress: 0,
-    message_sent: false,
+    messageText: "",
+    uploadsInProgress: 0,
+    messageSent: false,
   }
 
   let filepondRef = React.useRef(None)
@@ -30,7 +30,7 @@ let make = (
     switch action {
     | SendReply =>
       ReactUpdate.UpdateWithSideEffects(
-        {...state, message_text: "", message_sent: true},
+        {...state, messageText: "", messageSent: true},
         _self => {
           let attachments = switch filepondRef.current {
           | Some(filepond) => {
@@ -39,42 +39,42 @@ let make = (
             }
           | None => []
           }
-          onReplySend(conversation, state.message_text, attachments)
+          onReplySend(conversation, state.messageText, attachments)
           None
         },
       )
     | UploadStarted =>
       ReactUpdate.Update({
         ...state,
-        uploads_in_progress: state.uploads_in_progress + 1,
+        uploadsInProgress: state.uploadsInProgress + 1,
       })
     | UploadFinished =>
       ReactUpdate.Update({
         ...state,
-        uploads_in_progress: state.uploads_in_progress - 1,
+        uploadsInProgress: state.uploadsInProgress - 1,
       })
     | MessageTextChanged(text) =>
       ReactUpdate.Update({
         ...state,
-        message_text: text,
+        messageText: text,
       })
     }
   }, initialState)
 
   <div className="space-y-4 ml-20 print:hidden">
     <h2 className="text-xl font-semibold text-blue-500"> {"Antwort schreiben:"->React.string} </h2>
-    {if state.message_sent {
+    {if state.messageSent {
       <div className="bg-green-100 text-green-700 rounded p-2">
         {"Ihre Nachricht wurde erfolgreich verschickt."->React.string}
       </div>
     } else {
       React.null
     }}
-    <div className={state.message_sent ? "hidden" : ""}>
+    <div className={state.messageSent ? "hidden" : ""}>
       <textarea
         className="w-full rounded p-2 mb-2 border"
         rows=4
-        value=state.message_text
+        value=state.messageText
         onChange={event => send(MessageTextChanged((event->ReactEvent.Form.target)["value"]))}
       />
       <Filepond
@@ -124,8 +124,7 @@ let make = (
       </button>
       <button
         className="bg-blue-500 text-white rounded p-2 hover:bg-blue-400 disabled:bg-slate-50 disabled:text-gray-500 disabled:border-slate-200 disabled:border disabled:cursor-not-allowed"
-        disabled={String.length(state.message_text) == 0}
-        /* || state.uploads_in_progress != 0 */
+        disabled={String.length(state.messageText) == 0}
         onClick={_evt => {
           send(SendReply)
         }}>

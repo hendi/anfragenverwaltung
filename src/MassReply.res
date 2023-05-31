@@ -5,8 +5,8 @@ open ConversationData
 type state = {
   sending: bool,
   sent: bool,
-  message_text: string,
-  uploads_in_progress: int,
+  messageText: string,
+  uploadsInProgress: int,
 }
 
 type action =
@@ -19,8 +19,8 @@ type action =
 let initialState = {
   sending: false,
   sent: false,
-  message_text: "",
-  uploads_in_progress: 0,
+  messageText: "",
+  uploadsInProgress: 0,
 }
 
 let cbSent = self => {
@@ -37,14 +37,14 @@ let make = (~conversations, ~onMassReplySent) => {
     | UploadStarted =>
       ReactUpdate.Update({
         ...state,
-        uploads_in_progress: state.uploads_in_progress + 1,
+        uploadsInProgress: state.uploadsInProgress + 1,
       })
     | UploadFinished =>
       ReactUpdate.Update({
         ...state,
-        uploads_in_progress: state.uploads_in_progress - 1,
+        uploadsInProgress: state.uploadsInProgress - 1,
       })
-    | MessageTextChanged(text) => ReactUpdate.Update({...state, message_text: text})
+    | MessageTextChanged(text) => ReactUpdate.Update({...state, messageText: text})
     | SendMessage =>
       ReactUpdate.UpdateWithSideEffects(
         {...state, sending: true},
@@ -56,7 +56,7 @@ let make = (~conversations, ~onMassReplySent) => {
           | None => []
           }
 
-          onMassReplySent(conversations, self.state.message_text, attachments, _ => cbSent(self))
+          onMassReplySent(conversations, self.state.messageText, attachments, _ => cbSent(self))
           None
         },
       )
@@ -93,7 +93,7 @@ let make = (~conversations, ~onMassReplySent) => {
       <textarea
         className="w-full rounded p-2 border"
         rows=4
-        value=state.message_text
+        value=state.messageText
         onChange={event => send(MessageTextChanged((event->ReactEvent.Form.target)["value"]))}
         disabled={state.sending || state.sent}
       />
@@ -124,7 +124,7 @@ let make = (~conversations, ~onMassReplySent) => {
       <button
         className="bg-blue-500 text-white rounded p-2 hover:bg-blue-400 disabled:bg-slate-50 disabled:text-gray-500 disabled:border-slate-200 disabled:border disabled:cursor-not-allowed"
         onClick={_event => send(SendMessage)}
-        disabled={String.length(state.message_text) == 0 || (state.sending || state.sent)}>
+        disabled={String.length(state.messageText) == 0 || (state.sending || state.sent)}>
         {
           switch (state.sending, state.sent) {
           | (false, false) => "Antwort senden"
