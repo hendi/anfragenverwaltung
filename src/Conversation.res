@@ -136,33 +136,31 @@ let make = (
           <strong> {"Via: "->React.string} </strong>
           {conversation.source->React.string}
         </span>
-        {if String.length(state.notes) > 0 {
+      </div>
+      {if String.length(state.notes) > 0 {
           <div className="hidden-unless-print">
             <strong> {"Private Notizen: "->React.string} </strong>
-            <p className="nl2br"> {state.notes->React.string} </p>
+            <p> {state.notes->React.string} </p>
           </div>
         } else {
           React.null
-        }}
-      </div>
-      <div className="notes hidden-on-print">
-        <a onClick={_event => send(ToggleNotes)}>
-          <i className={state.show_notes ? "icon-caret-down" : "icon-caret-right"} />
-          {if String.length(state.notes) > 0 || String.length(conversation.notes) > 0 {
-            <strong> {"Private Notizen"->React.string} </strong>
-          } else {
-            "Private Notizen"->React.string
-          }}
+      }}
+      <div className="hidden-on-print">
+        <a className="text-blue-500" onClick={_event => send(ToggleNotes)}>
+          <i className={state.show_notes ? "icon-caret-down mr-1" : "icon-caret-right mr-1"} />
+          {"Private Notizen"->React.string}
         </a>
         {if state.show_notes {
           <div>
             <textarea
+              className="w-full rounded p-2 border"
+              rows=4
               value=state.notes
               onChange={event => send(NotesChanged((event->ReactEvent.Form.target)["value"]))}
             />
             {if state.notes != conversation.notes {
               <button
-                className="btn btn-primary"
+                className="bg-blue-500 text-white rounded p-2 mb-2"
                 onClick={_event => onSaveNotes(conversation, state.notes)}
                 disabled={state.notes == conversation.notes}>
                 {"Notizen speichern"->React.string}
@@ -177,7 +175,7 @@ let make = (
       </div>
     </div>
     // main area
-    <div className="overflow-y-auto" ref={ReactDOM.Ref.domRef(scrollableRef)}>
+    <div className="overflow-y-auto h-screen" ref={ReactDOM.Ref.domRef(scrollableRef)}>
       <div className="space-y-3 mb-12">
         {if loading {
           <p> {"Nachrichten werden geladen..."->React.string} </p>
