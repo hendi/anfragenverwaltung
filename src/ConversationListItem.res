@@ -38,7 +38,11 @@ let make = (
         <input
           type_="checkbox"
           checked=selected
-          onChange={_evt => onToggleSelect(conversation)}
+          onChange={_ => ()}
+          onClick={evt => {
+            ReactEvent.Mouse.stopPropagation(evt);
+            onToggleSelect(conversation)
+          }}
         />
         <span className="font-bold text-base pointer">
           {conversation.name->React.string}

@@ -10,7 +10,7 @@ type state = {
 module TrashButton = {
   @react.component
   let make = (~onClick, ~isInTrash: bool) => {
-    <button className="ConversationTrasher" onClick>
+    <button onClick>
       {if isInTrash {
         <span>
           <i className="icon-undo mr-1" />
