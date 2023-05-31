@@ -145,7 +145,7 @@ let make = (
         } else {
           React.null
       }}
-      <div className="hidden-on-print">
+      <div className="hidden-on-print mb-2">
         <a className="text-blue-500" onClick={_event => send(ToggleNotes)}>
           <i className={state.show_notes ? "icon-caret-down mr-1" : "icon-caret-right mr-1"} />
           {"Private Notizen"->React.string}
@@ -160,7 +160,7 @@ let make = (
             />
             {if state.notes != conversation.notes {
               <button
-                className="bg-blue-500 text-white rounded p-2 mb-2"
+                className="bg-blue-500 text-white rounded p-2"
                 onClick={_event => onSaveNotes(conversation, state.notes)}
                 disabled={state.notes == conversation.notes}>
                 {"Notizen speichern"->React.string}

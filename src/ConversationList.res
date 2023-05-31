@@ -63,7 +63,7 @@ let make = (
         onChange=onFilterTextChange
       />
     </div>
-    <div className="list space-y-2 overflow-y-scroll">
+    <div className="space-y-2 overflow-y-auto h-screen">
       {if loading {
         <p className="loadingState">
           {"Bitte warten, die Nachrichten werden geladen …"->React.string}
