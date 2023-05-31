@@ -1,4 +1,5 @@
 export function getAttribute(elementId, attributeName) {
   const element = document.querySelector(elementId);
-  return element ? element.getAttribute(attributeName) : null;
+  const attribute = element.getAttribute(attributeName);
+  return attribute ? attribute : null;
 }
