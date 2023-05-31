@@ -64,26 +64,26 @@ let make = (~conversations, ~onMassReplySent) => {
     }
   , initialState)
 
-  <div className="MassReply">
-    <h2> {"Sammelantwort schreiben"->React.string} </h2>
+  <div>
+    <h2 className="text-xl font-semibold"> {"Sammelantwort schreiben"->React.string} </h2>
     <p className="info">
       {"Hinweis: Die Empänger der Nachricht sehen nicht, dass es sich um eine Sammelantwort handelt."->React.string}
     </p>
-    <div className="recipient-list">
-      <div>
-        <strong> {"Empfänger:"->React.string} </strong>
-      </div>
+    <div className="flex flex-col space-y-2 mb-4">
+      <strong> {"Empfänger:"->React.string} </strong>
+      <div className="flex flex-row gap-2">
       {conversations
       ->Array.map((conversation: conversation) =>
         <div
-          className="recipient-list-item" key={"recipient_" ++ Belt.Int.toString(conversation.id)}>
+          className="bg-gray-200 rounded-full px-2 py-1" key={"recipient_" ++ Belt.Int.toString(conversation.id)}>
           {conversation.name->React.string}
         </div>
       )
       ->React.array}
+      </div>
     </div>
     {if state.sent {
-      <div className="alert alert-success">
+      <div className="bg-green-100 text-green-700 rounded p-2">
         {"Ihre Sammelantwort wurde erfolgreich verschickt."->React.string}
       </div>
     } else {
@@ -91,6 +91,8 @@ let make = (~conversations, ~onMassReplySent) => {
     }}
     <div className={state.sent ? "hidden" : ""}>
       <textarea
+        className="w-full rounded p-2 border"
+        rows=4
         value=state.message_text
         onChange={event => send(MessageTextChanged((event->ReactEvent.Form.target)["value"]))}
         disabled={state.sending || state.sent}
@@ -99,6 +101,7 @@ let make = (~conversations, ~onMassReplySent) => {
         ref={pond => filepondRef.current = Some(pond)}
         onprocessfilestart={_ => send(UploadStarted)}
         onprocessfile={_ => send(UploadFinished)}
+        labelIdle={`Sie können bis zu 3 Anhänge (jeweils max. 10MB) hochladen <span class="filepond--label-action"> [Dateien auswählen] </span>`}
         onremovefile={e => {
           let wasFullyUploaded = %raw(`
            function (resp) {
@@ -117,8 +120,9 @@ let make = (~conversations, ~onMassReplySent) => {
         maxTotalFileSize="20MB"
         server={ConversationData.apiBaseUrl ++ "/anfragen/upload_attachment"}
       />
+      <div className="flex justify-end">
       <button
-        className="btn-send btn btn-primary pull-right"
+        className="bg-blue-500 text-white rounded p-2 hover:bg-blue-400 disabled:bg-slate-50 disabled:text-gray-500 disabled:border-slate-200 disabled:border"
         onClick={_event => send(SendMessage)}
         disabled={String.length(state.message_text) == 0 || (state.sending || state.sent)}>
         {
@@ -129,6 +133,7 @@ let make = (~conversations, ~onMassReplySent) => {
           }->React.string
         }
       </button>
+      </div>
     </div>
   </div>
 }
