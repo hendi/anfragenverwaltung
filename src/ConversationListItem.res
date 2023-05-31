@@ -26,8 +26,8 @@ let make = (
   className={[
       "cursor-pointer p-2 border-b",
       conversation.is_in_trash ? `text-gray-500 ${active ? "bg-blue-100" : "" }` : bgColor,
-      selected ? "selected" : "",
-      !conversation.is_read ? "unread" : "",
+      selected ? "border-l-4 border-l-blue-500" : "",
+      !conversation.is_read && !selected ? "border-l-4 border-l-orange-500" : "",
     ]->Js.Array2.joinWith(" ")}
     >
     <div className="flex w-full justify-between">
