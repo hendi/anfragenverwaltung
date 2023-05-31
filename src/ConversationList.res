@@ -79,7 +79,7 @@ let make = (
         })
         ->React.array
       } else {
-        <p className="w-full">
+        <p className="p-2 w-full">
           {
             if hasAnyConversations {
               "Es sind noch keine Nachrichten eingegangen."
