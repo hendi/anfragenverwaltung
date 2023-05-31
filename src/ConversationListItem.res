@@ -24,7 +24,7 @@ let make = (
   <div
   ?onClick
   className={[
-      "cursor-pointer p-2",
+      "cursor-pointer p-2 border-b",
       conversation.is_in_trash ? `text-gray-500 ${active ? "bg-blue-100" : "" }` : bgColor,
       selected ? "selected" : "",
       !conversation.is_read ? "unread" : "",

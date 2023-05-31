@@ -48,13 +48,13 @@ let make = (
         React.null
       }}
       <input
-        className="w-full p-2 mb-2"
+        className="w-full p-2 border"
         type_="search"
         placeholder={`Nach Name, E-Mail, Telefon suchen …`}
         onChange=onFilterTextChange
       />
     </div>
-    <div className="space-y-2 overflow-y-auto h-screen">
+    <div className="overflow-y-auto h-screen">
       {if loading {
         <p className="loadingState">
           {"Bitte warten, die Nachrichten werden geladen …"->React.string}

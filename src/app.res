@@ -586,7 +586,7 @@ let make = (~immobilieId: int) => {
 
   <div>
     <ReactQueryDevtools position=#"bottom-right" />
-    <div className="grid grid-cols-12 gap-4 bg-slate-50">
+    <div className="grid grid-cols-12 bg-slate-50">
       <FolderNavigation
         onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
         activeFolder
