@@ -17,7 +17,7 @@ switch ReactDOM.querySelector("#root") {
     The immobilie.id is passed directly to the root div
     <div id="root" immobilie-id="{{ immobilie.id }}"></div>
   */
-  let fallbackId = 232806
+  let fallbackId = 177865
 
   let immobilieId = switch (getAttribute("#root", "immobilie-id")->Js.Nullable.toOption) {
     | Some(id) => switch (Belt.Int.fromString(id)) {
