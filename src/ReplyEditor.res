@@ -72,7 +72,7 @@ let make = (
     }}
     <div className={state.message_sent ? "hidden" : ""}>
       <textarea
-        className="w-full rounded p-2 mb-2"
+        className="w-full rounded p-2 mb-2 border"
         rows=4
         value=state.message_text
         onChange={event => send(MessageTextChanged((event->ReactEvent.Form.target)["value"]))}
