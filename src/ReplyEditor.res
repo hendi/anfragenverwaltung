@@ -117,13 +117,13 @@ let make = (
       />
       <div className="flex flex-row justify-end space-x-4">
        <button
-        className="bg-slate-50 border border-slate-200 rounded p-2 disabled:text-gray-500"
+        className="bg-slate-50 border border-slate-200 rounded p-2 disabled:text-gray-500 disabled:cursor-not-allowed"
         onClick=onIgnoreConversation
         disabled=conversation.is_ignored>
         {"Keine Antwort nötig"->React.string}
       </button>
       <button
-        className="bg-blue-500 text-white rounded p-2 hover:bg-blue-400 disabled:bg-slate-50 disabled:text-gray-500 disabled:border-slate-200 disabled:border"
+        className="bg-blue-500 text-white rounded p-2 hover:bg-blue-400 disabled:bg-slate-50 disabled:text-gray-500 disabled:border-slate-200 disabled:border disabled:cursor-not-allowed"
         disabled={String.length(state.message_text) == 0}
         /* || state.uploads_in_progress != 0 */
         onClick={_evt => {
