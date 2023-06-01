@@ -155,14 +155,14 @@ let make = (
         {if state.show_notes {
           <div>
             <textarea
-              className="w-full rounded p-2 border"
+              className="w-full rounded p-2 border mb-2"
               rows=4
               value=state.notes
               onChange={event => send(NotesChanged((event->ReactEvent.Form.target)["value"]))}
             />
             {if state.notes != conversation.notes {
               <button
-                className="bg-blue-500 text-white rounded p-2"
+                className="bg-blue-500 hover:bg-blue-400 text-white rounded p-2"
                 onClick={_event => onSaveNotes(conversation, state.notes)}
                 disabled={state.notes == conversation.notes}>
                 {"Notizen speichern"->React.string}
