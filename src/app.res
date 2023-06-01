@@ -603,7 +603,7 @@ let make = (~immobilieId: int) => {
     postReplyMutation((conversation, messageText, attachments))
   }
 
-  <div className="h-screen overflow-hidden">
+  <div className="h-screen overflow-hidden print:h-full">
     <ReactQueryDevtools position=#"bottom-right" />
     <div className="grid grid-cols-12 bg-slate-50">
       <FolderNavigation
