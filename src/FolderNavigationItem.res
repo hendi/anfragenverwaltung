@@ -12,9 +12,9 @@ let make = (
     ((isActive ? "bg-blue-100 text-blue-500" : "") ++
     (" " ++ (unreadCount > 0 ? "unread" : "")))}
     onClick>
-    <span className="flex gap-2">
+    <span className="flex gap-1">
       <span className="inline-block w-4"> <i className={"main-icon " ++ icon} /> </span>
-      <span className="whitespace-nowrap"> {label->React.string} </span>
+      <span> {label->React.string} </span>
     </span>
     <span className="pl-2"> {` (${count->Belt.Int.toString})`->React.string} </span>
   </button>
