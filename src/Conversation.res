@@ -177,7 +177,7 @@ let make = (
       </div>
     </div>
     // main area
-    <div className="overflow-y-scroll h-screen print:h-full px-2" ref={ReactDOM.Ref.domRef(scrollableRef)}>
+    <div className="overflow-y-scroll h-auto lg:h-screen print:h-full px-2" ref={ReactDOM.Ref.domRef(scrollableRef)}>
       <div className="space-y-3 mb-12">
         {if loading {
           <p> {"Nachrichten werden geladen..."->React.string} </p>

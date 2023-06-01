@@ -53,7 +53,7 @@ let make = (
   ~onFolderClick: Folder.t => unit,
   ~conversations: array<ConversationData.conversation>,
 ) => {
-  <div className="col-span-2 print:hidden bg-gray-100 border">
+  <div className="col-span-12 lg:col-span-2 print:hidden bg-gray-100 border">
     {Belt.Array.map(items, ({label, icon, folder}) => {
       let onClick = evt => {
         ReactEvent.Mouse.preventDefault(evt)

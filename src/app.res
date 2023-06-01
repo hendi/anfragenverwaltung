@@ -603,7 +603,7 @@ let make = (~immobilieId: int) => {
     postReplyMutation((conversation, messageText, attachments))
   }
 
-  <div className="h-screen overflow-hidden print:h-full">
+  <div className="lg:h-screen overflow-hidden print:h-full">
     <ReactQueryDevtools position=#"bottom-right" />
     <div className="grid grid-cols-12 bg-slate-50">
       <FolderNavigation
@@ -611,7 +611,7 @@ let make = (~immobilieId: int) => {
         activeFolder
         conversations
       />
-      <div className="col-span-4 print:hidden" ref={ReactDOM.Ref.domRef(mainRef)}>
+      <div className="col-span-12 lg:col-span-4 print:hidden" ref={ReactDOM.Ref.domRef(mainRef)}>
         <ConversationList
           folder=activeFolder
           loading={conversationsQuery == Loading}
@@ -641,7 +641,7 @@ let make = (~immobilieId: int) => {
           hasAnyConversations={Array.length(state.conversations) > 0}
         />
       </div>
-      <div className="col-span-6 print:col-span-12">
+      <div className="col-span-12 lg:col-span-6 print:col-span-12">
         {switch route {
         | Unknown404 => <div> {React.string("404 not found")} </div>
         | Conversation(_id) =>
