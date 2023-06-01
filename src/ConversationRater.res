@@ -4,7 +4,7 @@ module RateButton = {
   type icon = [#"icon-thumbs-up-alt" | #"icon-unchecked" | #"icon-thumbs-down-alt"]
   @react.component
   let make = (~active=false, ~icon: icon, ~title: string, ~onClick: ReactEvent.Mouse.t => unit) => {
-    let fontWeight = active ? "font-bold" : "font-normal"
+    let fontWeight = active ? "!font-bold" : "font-normal"
 
     <button
       onClick
