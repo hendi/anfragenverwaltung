@@ -619,6 +619,12 @@ let make = (~immobilieId: int) => {
     postReplyMutation((conversation, messageText, attachments))
   }
 
+  let closeFoldersInMobile = () => {
+    if (isMobile) {
+      setShowNavigationFolders(_ => false)
+    }
+  }
+
   <div className="lg:h-screen overflow-hidden print:h-full">
     <ReactQueryDevtools position=#"bottom-right" />
     <div className="grid grid-cols-12 bg-slate-50">
@@ -630,6 +636,8 @@ let make = (~immobilieId: int) => {
         onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
         activeFolder
         conversations
+        showFoldersInMobile={isMobile ? isMobile && showNavigationFolders : true}
+        closeFoldersInMobile=closeFoldersInMobile
       />
       <div className="col-span-12 lg:col-span-4 print:hidden" ref={ReactDOM.Ref.domRef(mainRef)}>
         <ConversationList
