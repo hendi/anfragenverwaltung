@@ -79,12 +79,16 @@ let make = (
     <div>
       <div className={Array.joinWith([
         "flex flex-row items-center justify-between py-2 px-2 text-black",
-        switch conversation.rating {
-        | Green => "bg-gradient-to-b from-green-100 to-slate-50"
-        | Yellow => "bg-gradient-to-b from-yellow-100 to-slate-50"
-        | Red => "bg-gradient-to-b from-red-100 to-slate-50"
-        | Unrated => ""
-        },
+        if conversation.is_in_trash {
+          "bg-gradient-to-b from-gray-100 to-slate-50"
+        } else {
+          switch conversation.rating {
+          | Green => "bg-gradient-to-b from-green-100 to-slate-50"
+          | Yellow => "bg-gradient-to-b from-yellow-100 to-slate-50"
+          | Red => "bg-gradient-to-b from-red-100 to-slate-50"
+          | Unrated => ""
+          }
+        }
       ],
       " ",)}
       >
