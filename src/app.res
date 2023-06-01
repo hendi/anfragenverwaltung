@@ -626,7 +626,6 @@ let make = (~immobilieId: int) => {
   }
 
   <div className="lg:h-screen overflow-hidden print:h-full">
-    <ReactQueryDevtools position=#"bottom-right" />
     <div className="grid grid-cols-12 bg-slate-50">
       <MobileNavigator 
         activeFolder 
