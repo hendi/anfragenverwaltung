@@ -406,17 +406,25 @@ let initialState = {
   filterText: "",
 }
 
+@val external innerWidth: int = "window.innerWidth"
+@val external addEventListener: (string, unit => unit) => unit = "window.addEventListener"
+@val external removeEventListener: (string, unit => unit) => unit = "window.removeEventListener"
+
+
 @react.component
 let make = (~immobilieId: int) => {
   let mainRef = React.useRef(Js.Nullable.null)
 
+  let (isMobile, setIsMobile) = React.useState(() => false)
+
+  let checkScreenSize = () => {
+    let width = innerWidth
+    setIsMobile(_ => width <= 1024)
+  }
+
   let url = RescriptReactRouter.useUrl()
   //let route = Route.fromUrlPath(url.path)
   let route = Route.fromUrlHash(url.hash)
-  Js.log("-----")
-  Js.log(route)
-  //Js.log(tesst)
-  Js.log("-----")
 
   let client = ReactQuery.Client.useQueryClient()
 
@@ -565,6 +573,13 @@ let make = (~immobilieId: int) => {
       })
     }
   , initialState)
+
+  React.useEffect0(() => {
+    checkScreenSize()
+    let _ = addEventListener("resize", checkScreenSize)
+
+    Some(() => removeEventListener("resize", checkScreenSize))
+  })
 
   React.useEffect1(() => {
     switch currentConversation {
