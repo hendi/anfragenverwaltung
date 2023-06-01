@@ -68,49 +68,63 @@ module Route = {
     | MassReply
     | Unknown404
 
-  let fromUrlPath = (path: list<string>): t => {
-    switch path {
-    | list{} => ConversationList(New)
-    | list{"mass-reply"} => MassReply
-    | list{"conversation", id} =>
-      switch Belt.Int.fromString(id) {
-      | Some(id) => Conversation(id)
-      | None => Unknown404
-      }
-    | list{"folder", str} =>
-      let folder = switch str {
-      | "all" => Folder.All->Some
-      | "new" => New->Some
-      | "unreplied" => Unreplied->Some
-      | "replied" => Replied->Some
-      | "trash" => Trash->Some
-      | _ => None
-      }
+  let getFolder = (str: string): option<Folder.t> => {
+    switch str {
+    | "all" => Some(Folder.All)
+    | "new" => Some(New)
+    | "unreplied" => Some(Unreplied)
+    | "replied" => Some(Replied)
+    | "trash" => Some(Trash)
+    | _ => None
+    }
+  }
 
-      switch folder {
-      | None => Unknown404
-      | Some(folder) => ConversationList(folder)
-      }
-    | list{"folder", "by-rating", str} =>
-      let folder = switch str {
-      | "favorite" => Folder.ByRating(Green)
-      | "maybe" => ByRating(Yellow)
-      | "uninteresting" => ByRating(Red)
-      | "unrated"
-      | _ =>
-        ByRating(Unrated)
-      }
+  let getRatingFolder = (str: string): Folder.t => {
+    switch str {
+    | "favorite" => Folder.ByRating(Green)
+    | "maybe" => Folder.ByRating(Yellow)
+    | "uninteresting" => Folder.ByRating(Red)
+    | "unrated" 
+    | _ => Folder.ByRating(Unrated) /* Default unrated */
+    }
+  }
 
-      ConversationList(folder)
-    | _ => Unknown404
+  let fromUrlHash = (hash: string): t => {
+    let parts = Js.String.split("/", hash)
+
+    switch (Belt.Array.get(parts, 1)) {
+      | Some("mass-reply") => MassReply
+      | Some("conversation") => 
+        switch (Belt.Array.get(parts, 2)->Belt.Option.flatMap(Belt.Int.fromString)) {
+          | Some(id) => Conversation(id)
+          | None => Unknown404
+        }
+    | Some("folder") => 
+      let folderTemp = 
+        Belt.Array.get(parts, 2)
+        ->Belt.Option.flatMap(folderString => 
+          switch folderString {
+            | "by-rating" => 
+              Belt.Array.get(parts, 3)
+              ->Belt.Option.map(getRatingFolder)
+            | _ => getFolder(folderString)
+          }
+        )
+
+      switch folderTemp {
+        | Some(folder) => ConversationList(folder)
+        | None => Unknown404
+      }
+      | Some("") | None => ConversationList(New)
+      | _ => Unknown404
     }
   }
 
   let toUrl = route => {
     switch route {
-    | Unknown404 => "/not-found"
-    | Conversation(id) => "/conversation/" ++ Belt.Int.toString(id)
-    | MassReply => "/mass-reply"
+    | Unknown404 => "#/not-found"
+    | Conversation(id) => "#/conversation/" ++ Belt.Int.toString(id)
+    | MassReply => "#/mass-reply"
     | ConversationList(folder) =>
       let folderStr = switch folder {
       | All => "all"
@@ -128,7 +142,7 @@ module Route = {
         }
       }
 
-      `/folder/${folderStr}`
+      `#/folder/${folderStr}`
     }
   }
 }
@@ -397,7 +411,12 @@ let make = (~immobilieId: int) => {
   let mainRef = React.useRef(Js.Nullable.null)
 
   let url = RescriptReactRouter.useUrl()
-  let route = Route.fromUrlPath(url.path)
+  //let route = Route.fromUrlPath(url.path)
+  let route = Route.fromUrlHash(url.hash)
+  Js.log("-----")
+  Js.log(route)
+  //Js.log(tesst)
+  Js.log("-----")
 
   let client = ReactQuery.Client.useQueryClient()
 
@@ -584,7 +603,7 @@ let make = (~immobilieId: int) => {
     postReplyMutation((conversation, messageText, attachments))
   }
 
-  <div>
+  <div className="h-screen overflow-hidden">
     <ReactQueryDevtools position=#"bottom-right" />
     <div className="grid grid-cols-12 bg-slate-50">
       <FolderNavigation
