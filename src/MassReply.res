@@ -89,7 +89,7 @@ let make = (~conversations, ~onMassReplySent) => {
     }}
     <div className={state.sent ? "hidden" : ""}>
       <textarea
-        className="w-full rounded p-2 border"
+        className="w-full rounded p-2 mb-2 border"
         rows=4
         value=state.messageText
         onChange={event => send(MessageTextChanged((event->ReactEvent.Form.target)["value"]))}
