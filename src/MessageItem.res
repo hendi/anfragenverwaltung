@@ -5,8 +5,8 @@ let make = (~message: message) => {
   <div
     className={"border-2 rounded bg-white px-4 py-4 " ++
     switch message.type_ {
-    | Incoming => "mr-20"
-    | Outgoing => "ml-20"
+    | Incoming => "lg:mr-20"
+    | Outgoing => "lg:ml-20"
     }}>
     <span>
       {if message.type_ == Incoming {
