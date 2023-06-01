@@ -62,7 +62,7 @@ let make = (~conversations, ~onMassReplySent) => {
     }
   , initialState)
 
-  <div>
+  <div className="p-2">
     <h2 className="text-xl font-semibold"> {"Sammelantwort schreiben"->React.string} </h2>
     <p>
       {"Hinweis: Die Empänger der Nachricht sehen nicht, dass es sich um eine Sammelantwort handelt."->React.string}
