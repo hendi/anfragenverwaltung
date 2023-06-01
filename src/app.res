@@ -416,6 +416,7 @@ let make = (~immobilieId: int) => {
   let mainRef = React.useRef(Js.Nullable.null)
 
   let (isMobile, setIsMobile) = React.useState(() => false)
+  let (showNavigationFolders, setShowNavigationFolders) = React.useState(() => false)
 
   let checkScreenSize = () => {
     let width = innerWidth
@@ -621,6 +622,10 @@ let make = (~immobilieId: int) => {
   <div className="lg:h-screen overflow-hidden print:h-full">
     <ReactQueryDevtools position=#"bottom-right" />
     <div className="grid grid-cols-12 bg-slate-50">
+      <MobileNavigator 
+        activeFolder 
+        foldersIsShowing=showNavigationFolders 
+        onToggleFolders={_event => { setShowNavigationFolders(oldState => !oldState)}} />
       <FolderNavigation
         onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
         activeFolder
