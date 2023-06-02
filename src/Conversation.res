@@ -8,7 +8,7 @@ type state = {
 module TrashButton = {
   @react.component
   let make = (~onClick, ~isInTrash: bool) => {
-    <div className="flex justify-center bg-white py-1 px-2 hover:bg-blue-100 lg:border border-y border-r cursor-pointer w-full lg:w-auto" onClick>
+    <div className="flex justify-center bg-white py-2 lg:py-1 px-2 hover:bg-blue-100 lg:border border-y border-r cursor-pointer w-full lg:w-auto" onClick>
       {if isInTrash {
         <span>
           <i className="icon-undo mr-1" />
