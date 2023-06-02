@@ -636,7 +636,7 @@ let make = (~immobilieId: int) => {
 
   let conversationName = switch currentConversation {
     | None => ""
-    | Some(conversation) => `Nachricht von ${conversation.name}`
+    | Some(conversation) => `Nachrichten von ${conversation.name}`
   };
 
   <div className="print:h-full">
