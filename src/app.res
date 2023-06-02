@@ -631,7 +631,8 @@ let make = (~immobilieId: int) => {
     back()
   }
 
-  let isFolder = url.hash !== Route.toUrl(MassReply) && Js.String.includes("conversation", url.hash) === false
+  let isFolder = url.hash !== Js.String.replace("#", "", Route.toUrl(MassReply)) && Js.String.includes("conversation", url.hash) === false
+
 
   let conversationName = switch currentConversation {
     | None => ""
@@ -645,7 +646,7 @@ let make = (~immobilieId: int) => {
         foldersIsShowing=showNavigationFolders 
         onToggleFolders={_event => { setShowNavigationFolders(oldState => !oldState)}} 
         isFolder
-        label={url.hash == Route.toUrl(MassReply) ? "Sammelanwort" : conversationName}
+        label={url.hash == Js.String.replace("#", "", Route.toUrl(MassReply)) ? "Sammelanwort" : conversationName}
         goBack={_event => navigateToLasturl()}
         />
       <FolderNavigation
