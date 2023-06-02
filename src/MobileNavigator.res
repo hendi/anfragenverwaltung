@@ -30,7 +30,7 @@ let make = (~activeFolder: Folder.t, ~foldersIsShowing: bool, ~onToggleFolders: 
   <div className="col-span-12 bg-slate-100 border lg:hidden print:hidden">
     <div className="flex flex-row items-center justify-start text-xl p-2">
       <div onClick=onToggleFolders className="flex cursor-pointer hover:bg-blue-100 rounded items-center justify-center p-2 w-10 h-10 mr-2">
-        <i className={foldersIsShowing ? "icon-caret-down" : "icon-caret-right"} />
+        <i className={foldersIsShowing ? "icon-remove" : "icon-reorder"} />
       </div>
       {getLabel(activeFolder)->React.string}
     </div>
