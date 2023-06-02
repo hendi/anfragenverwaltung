@@ -28,7 +28,7 @@ let make = (
       {if folder != Trash {
         <div className="flex flex-row justify-around items-center bg-white lg:bg-slate-50">
           <button 
-            className="flex flex-col w-full items-center justify-center hover:bg-blue-200 p-2 hover:disabled:bg-transparent disabled:text-gray-500 disabled:cursor-not-allowed" 
+            className="flex flex-col w-full items-center justify-center border-r lg:border-none hover:bg-blue-200 p-2 hover:disabled:bg-transparent disabled:text-gray-500 disabled:cursor-not-allowed" 
             disabled={Array.length(conversations) == 0 || List.length(selectedConversations) == Array.length(conversations) }
             onClick={_evt => onToggleSelectAll(true)}>
             <i className="icon-check" />
@@ -36,7 +36,7 @@ let make = (
             <span className="lg:hidden">{"Auswählen"->React.string}</span>
           </button>
           <button
-            className="flex flex-col items-center w-full hover:bg-blue-200 p-2 hover:disabled:bg-transparent justify-center disabled:text-gray-500 disabled:cursor-not-allowed" 
+            className="flex flex-col items-center w-full border-r lg:border-none hover:bg-blue-200 p-2 hover:disabled:bg-transparent justify-center disabled:text-gray-500 disabled:cursor-not-allowed" 
             disabled={List.length(selectedConversations) == 0} 
             onClick=onMassReply>
             <i className="icon-mail-reply-all" />
