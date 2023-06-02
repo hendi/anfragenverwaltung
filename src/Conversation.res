@@ -89,7 +89,7 @@ let make = (
     )}>
       {if isMobile {
         <div className="flex flex-col">
-          <div className="flex flex-row justify-around items-center text-black">
+          <div className="flex flex-row justify-around items-center text-black print:hidden">
             <ConversationPrinter conversation />
             <ConversationReadStatus conversation onReadStatus />
             <TrashButton
@@ -99,9 +99,10 @@ let make = (
               }}
             />
           </div>
-          <div className={highlightGradient}>
+          <div className={Array.joinWith(["print:hidden",highlightGradient]," ",)}>
            <ConversationRater conversation onRating />
           </div>
+          <h2 className="text-xl font-semibold p-2 hidden print:block"> {conversation.name->React.string} </h2>
         </div>
       } else {
         <div className={Array.joinWith([
