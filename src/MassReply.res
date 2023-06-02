@@ -69,7 +69,7 @@ let make = (~conversations, ~onMassReplySent) => {
     </p>
     <div className="flex flex-col space-y-2 mb-4">
       <strong> {"Empfänger:"->React.string} </strong>
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-row flex-wrap gap-2">
       {conversations
       ->Array.map((conversation: conversation) =>
         <div
