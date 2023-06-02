@@ -31,7 +31,7 @@ let make = (
     ]->Js.Array2.joinWith(" ")}
     >
     <div className="flex w-full justify-between">
-      <div className="flex flex-row gap-2 items-center">
+      <div className="flex flex-row gap-1 items-center">
         <input
           type_="checkbox"
           checked=selected
