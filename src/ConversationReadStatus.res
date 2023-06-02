@@ -7,7 +7,7 @@ let make = (~conversation, ~onReadStatus: (conversation, bool) => unit) => {
     onReadStatus(conversation, !conversation.is_read)
   }
 
-  <div className="bg-white py-1 px-2 hover:bg-blue-100 border">
+  <div className="flex justify-center bg-white py-1 px-2 hover:bg-blue-100 border cursor-pointer w-full lg:w-auto">
     {if conversation.is_read && !conversation.is_in_trash {
       <span onClick title="Als ungelesen markieren">
         <i className="icon-check mr-1" /> {"Gelesen"->React.string}

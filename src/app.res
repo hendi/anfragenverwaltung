@@ -652,9 +652,10 @@ let make = (~immobilieId: int) => {
         onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
         activeFolder
         conversations
-        showFoldersInMobile={isMobile ? isMobile && showNavigationFolders : true}
+        showFoldersInMobile={isMobile ? isMobile && showNavigationFolders && isFolder: true}
         closeFoldersInMobile=closeFoldersInMobile
       />
+      {if isMobile ? isMobile && isFolder: true {
       <div className="col-span-12 lg:col-span-4 print:hidden" ref={ReactDOM.Ref.domRef(mainRef)}>
         <ConversationList
           folder=activeFolder
@@ -685,6 +686,9 @@ let make = (~immobilieId: int) => {
           hasAnyConversations={Array.length(state.conversations) > 0}
         />
       </div>
+      } else {
+        React.null
+      }}
       <div className="col-span-12 lg:col-span-6 print:col-span-12">
         {switch route {
         | Unknown404 => <div> {React.string("404 not found")} </div>
@@ -709,7 +713,7 @@ let make = (~immobilieId: int) => {
                 ignoreConversationMutation((conversation.id, immobilieId, true))
               }}
               onSaveNotes
-              onBack={_event => send(ShowRoute(ConversationList(activeFolder)))}
+              isMobile
             />
           | _ => <div> {React.string("Invalid current_conversation")} </div>
           }

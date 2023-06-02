@@ -8,7 +8,7 @@ type state = {
 module TrashButton = {
   @react.component
   let make = (~onClick, ~isInTrash: bool) => {
-    <div className="bg-white py-1 px-2 hover:bg-blue-100 border" onClick>
+    <div className="flex justify-center bg-white py-1 px-2 hover:bg-blue-100 lg:border border-y border-r cursor-pointer w-full lg:w-auto" onClick>
       {if isInTrash {
         <span>
           <i className="icon-undo mr-1" />
@@ -44,9 +44,9 @@ let make = (
   ~onReadStatus: (conversation, bool) => unit,
   ~onIgnore: unit => unit,
   ~onSaveNotes,
-  ~onBack as _,
   ~messages: array<message>,
   ~loading: bool,
+  ~isMobile: bool,
 ) => {
   let scrollableRef = React.useRef(Js.Nullable.null)
   let initialState = {
@@ -68,6 +68,17 @@ let make = (
     }
   , initialState)
 
+  let highlightGradient = if conversation.is_in_trash {
+    "bg-gradient-to-b from-gray-300 to-slate-50"
+  } else {
+    switch conversation.rating {
+    | Green => "bg-gradient-to-b from-green-100 to-slate-50"
+    | Yellow => "bg-gradient-to-b from-yellow-100 to-slate-50"
+    | Red => "bg-gradient-to-b from-red-100 to-slate-50"
+    | Unrated => ""
+    }
+  }
+
   <div
     className={Array.joinWith(
       [
@@ -76,37 +87,45 @@ let make = (
       ],
       " ",
     )}>
-    <div>
-      <div className={Array.joinWith([
-        "flex flex-row items-center justify-between py-2 px-2 text-black",
-        if conversation.is_in_trash {
-          "bg-gradient-to-b from-gray-300 to-slate-50"
-        } else {
-          switch conversation.rating {
-          | Green => "bg-gradient-to-b from-green-100 to-slate-50"
-          | Yellow => "bg-gradient-to-b from-yellow-100 to-slate-50"
-          | Red => "bg-gradient-to-b from-red-100 to-slate-50"
-          | Unrated => ""
-          }
-        }
-      ],
-      " ",)}
-      >
-        <h2 className="text-xl font-semibold"> {conversation.name->React.string} </h2>
-        <div className="flex flex-row gap-2 cursor-pointer items-center print:hidden">
-        <ConversationPrinter conversation />
-        <ConversationReadStatus conversation onReadStatus />
-        <TrashButton
-          isInTrash={conversation.is_in_trash}
-          onClick={_evt => {
-            onTrash(conversation, !conversation.is_in_trash)
-          }}
-        />
-        <ConversationRater conversation onRating />
+      {if isMobile {
+        <div className="flex flex-col">
+          <div className="flex flex-row justify-around items-center text-black">
+            <ConversationPrinter conversation />
+            <ConversationReadStatus conversation onReadStatus />
+            <TrashButton
+              isInTrash={conversation.is_in_trash}
+              onClick={_evt => {
+                onTrash(conversation, !conversation.is_in_trash)
+              }}
+            />
+          </div>
+          <div className={highlightGradient}>
+           <ConversationRater conversation onRating />
+          </div>
         </div>
-      </div>
+      } else {
+        <div className={Array.joinWith([
+          "flex flex-row items-center justify-between py-2 px-2 text-black",
+          highlightGradient
+        ],
+        " ",)}
+        >
+          <h2 className="text-xl font-semibold"> {conversation.name->React.string} </h2>
+          <div className="flex flex-row gap-2 cursor-pointer items-center print:hidden">
+            <ConversationPrinter conversation />
+            <ConversationReadStatus conversation onReadStatus />
+            <TrashButton
+              isInTrash={conversation.is_in_trash}
+              onClick={_evt => {
+                onTrash(conversation, !conversation.is_in_trash)
+              }}
+            />
+            <ConversationRater conversation onRating />
+          </div>
+        </div>
+      }}
       
-      <div className="space-x-2 px-2">
+      <div className="flex flex-col lg:block lg:space-x-2 px-2">
         <span>
           <strong> {"E-Mail: "->React.string} </strong>
           {conversation.email->React.string}
@@ -175,7 +194,7 @@ let make = (
           React.null
         }}
       </div>
-    </div>
+    
     // main area
     <div className="overflow-y-scroll h-auto lg:h-screen print:h-full px-2" ref={ReactDOM.Ref.domRef(scrollableRef)}>
       <div className="space-y-3 mb-4">

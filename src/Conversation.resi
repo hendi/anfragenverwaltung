@@ -9,7 +9,7 @@ let make: (
   ~onReadStatus: (conversation, bool) => unit,
   ~onIgnore: unit => unit,
   ~onSaveNotes: (conversation, string) => unit,
-  ~onBack: unit => unit,
   ~messages: array<message>,
   ~loading: bool,
+  ~isMobile: bool,
 ) => React.element

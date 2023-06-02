@@ -6,7 +6,7 @@ open ConversationData
 
 @react.component
 let make = (~conversation as _: conversation) => {
-    <div className="bg-white py-1 px-2 hover:bg-blue-100 border">
+    <div className="flex justify-center bg-white py-1 px-2 hover:bg-blue-100 lg:border border-y border-l cursor-pointer w-full lg:w-auto">
       <span onClick={_event => print()}>
         <i className="icon-print mr-1" title="Unterhaltung drucken" /> {"Drucken"->React.string}
       </span>
