@@ -26,13 +26,29 @@ let getLabel = (f: Folder.t) => {
 }
 
 @react.component
-let make = (~activeFolder: Folder.t, ~foldersIsShowing: bool, ~onToggleFolders: ReactEvent.Mouse.t => unit) => {
+let make = (
+  ~activeFolder: Folder.t, 
+  ~foldersIsShowing: bool, 
+  ~onToggleFolders: ReactEvent.Mouse.t => unit,
+  ~isFolder: bool,
+  ~goBack: ReactEvent.Mouse.t => unit,
+  ~label: string="",
+  ) => {
+
+  let folderDiv = isFolder ? 
+    <div onClick=onToggleFolders className="flex cursor-pointer hover:bg-blue-100 rounded items-center justify-center p-2 w-10 h-10 mr-2">
+      <i className={foldersIsShowing ? "icon-remove" : "icon-reorder"} />
+    </div> : 
+    <div onClick=goBack className="flex cursor-pointer hover:bg-blue-100 rounded items-center justify-center p-2 w-10 h-10 mr-2">
+      <i className="icon-arrow-left"/>
+    </div>;
+
+    let folderLabel = isFolder ? {getLabel(activeFolder)->React.string} : {label->React.string};
+
   <div className="col-span-12 bg-slate-100 border lg:hidden print:hidden">
     <div className="flex flex-row items-center justify-start text-xl p-2">
-      <div onClick=onToggleFolders className="flex cursor-pointer hover:bg-blue-100 rounded items-center justify-center p-2 w-10 h-10 mr-2">
-        <i className={foldersIsShowing ? "icon-remove" : "icon-reorder"} />
-      </div>
-      {getLabel(activeFolder)->React.string}
+      {folderDiv}
+      {folderLabel}
     </div>
   </div>
 }

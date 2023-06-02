@@ -409,6 +409,7 @@ let initialState = {
 @val external innerWidth: int = "window.innerWidth"
 @val external addEventListener: (string, unit => unit) => unit = "window.addEventListener"
 @val external removeEventListener: (string, unit => unit) => unit = "window.removeEventListener"
+@bs.val @bs.scope("window") @bs.scope("history") external back: unit => unit = "back"
 
 
 @react.component
@@ -426,6 +427,7 @@ let make = (~immobilieId: int) => {
   let url = RescriptReactRouter.useUrl()
   //let route = Route.fromUrlPath(url.path)
   let route = Route.fromUrlHash(url.hash)
+
 
   let client = ReactQuery.Client.useQueryClient()
 
@@ -625,12 +627,27 @@ let make = (~immobilieId: int) => {
     }
   }
 
+  let navigateToLasturl = () => {
+    back()
+  }
+
+  let isFolder = url.hash !== Route.toUrl(MassReply) && Js.String.includes("conversation", url.hash) === false
+
+  let conversationName = switch currentConversation {
+    | None => ""
+    | Some(conversation) => `Nachricht von ${conversation.name}`
+  };
+
   <div className="print:h-full">
     <div className="grid grid-cols-12 bg-slate-50">
       <MobileNavigator 
         activeFolder 
         foldersIsShowing=showNavigationFolders 
-        onToggleFolders={_event => { setShowNavigationFolders(oldState => !oldState)}} />
+        onToggleFolders={_event => { setShowNavigationFolders(oldState => !oldState)}} 
+        isFolder
+        label={url.hash == Route.toUrl(MassReply) ? "Sammelanwort" : conversationName}
+        goBack={_event => navigateToLasturl()}
+        />
       <FolderNavigation
         onFolderClick={folder => send(ShowRoute(ConversationList(folder)))}
         activeFolder
