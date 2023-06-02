@@ -21,7 +21,7 @@ let make = (~message: message) => {
       {" um "->React.string}
       <IsoTime date={Js.Date.fromString(message.date)} />
     </span>
-    <hr />
+    <hr className="mb-2" />
     <p> {message.content->React.string} </p>
     {if Array.length(message.attachments) > 0 {
       <div>
