@@ -8,7 +8,7 @@ type state = {
 module TrashButton = {
   @react.component
   let make = (~onClick, ~isInTrash: bool) => {
-    <div onClick>
+    <div className="bg-white py-1 px-2 hover:bg-blue-100 border" onClick>
       {if isInTrash {
         <span>
           <i className="icon-undo mr-1" />
@@ -93,7 +93,7 @@ let make = (
       " ",)}
       >
         <h2 className="text-xl font-semibold"> {conversation.name->React.string} </h2>
-        <div className="flex flex-row gap-2 cursor-pointer print:hidden">
+        <div className="flex flex-row gap-2 cursor-pointer items-center print:hidden">
         <ConversationPrinter conversation />
         <ConversationReadStatus conversation onReadStatus />
         <TrashButton
