@@ -36,10 +36,10 @@ let make = (
   ) => {
 
   let folderDiv = isFolder ? 
-    <div onClick=onToggleFolders className="flex cursor-pointer hover:bg-blue-100 rounded items-center justify-center p-2 w-10 h-10 mr-2">
+    <div onClick=onToggleFolders className="flex cursor-pointer bg-slate-200 border hover:bg-blue-100 rounded items-center justify-center p-2 w-10 h-10 mr-2">
       <i className={foldersIsShowing ? "icon-remove" : "icon-reorder"} />
     </div> : 
-    <div onClick=goBack className="flex cursor-pointer hover:bg-blue-100 rounded items-center justify-center p-2 w-10 h-10 mr-2">
+    <div onClick=goBack className="flex cursor-pointer bg-slate-200 border hover:bg-blue-100 rounded items-center justify-center p-2 w-10 h-10 mr-2">
       <i className="icon-arrow-left"/>
     </div>;
 
