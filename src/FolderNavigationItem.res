@@ -16,6 +16,6 @@ let make = (
       <span className="inline-block w-4"> <i className={"main-icon " ++ icon} /> </span>
       <span> {label->React.string} </span>
     </span>
-    <span className="pl-2"> {` (${count->Belt.Int.toString})`->React.string} </span>
+    <span className="pl-1"> {` (${count->Belt.Int.toString})`->React.string} </span>
   </button>
 }
