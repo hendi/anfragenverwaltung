@@ -22,7 +22,7 @@ let make = (~message: message) => {
       <IsoTime date={Js.Date.fromString(message.date)} />
     </span>
     <hr className="mb-2" />
-    <p> {message.content->React.string} </p>
+    <p className="whitespace-pre-line"> {message.content->React.string} </p>
     {if Array.length(message.attachments) > 0 {
       <div>
         <strong> {"Anhänge"->React.string} </strong>
