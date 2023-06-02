@@ -178,7 +178,7 @@ let make = (
     </div>
     // main area
     <div className="overflow-y-scroll h-auto lg:h-screen print:h-full px-2" ref={ReactDOM.Ref.domRef(scrollableRef)}>
-      <div className=`space-y-3 mb-12 ${conversation.is_in_trash ? "lg:mb-16" : ""}`>
+      <div className="space-y-3 mb-4">
         {if loading {
           <p> {"Nachrichten werden geladen..."->React.string} </p>
         } else {
@@ -200,7 +200,7 @@ let make = (
           onIgnoreConversation={_event => onIgnore()}
         />
       } else {
-         <div className="lg:p-8"></div>
+         React.null
       }}
     </div>
   </div>
