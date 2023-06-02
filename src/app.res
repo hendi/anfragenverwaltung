@@ -625,7 +625,7 @@ let make = (~immobilieId: int) => {
     }
   }
 
-  <div className="lg:h-screen print:h-full">
+  <div className="print:h-full">
     <div className="grid grid-cols-12 bg-slate-50">
       <MobileNavigator 
         activeFolder 
