@@ -17,7 +17,7 @@ module RateButton = {
 
 @react.component
 let make = (~conversation, ~onRating) => {
-  <div className="p-2 lg:p-0">
+  <div className="flex p-2 lg:p-0">
     <RateButton
       icon=#"icon-thumbs-up-alt"
       onClick={evt => onRating(conversation, conversation.rating === Green ? Unrated : Green, evt)}
