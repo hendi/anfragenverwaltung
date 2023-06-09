@@ -1,7 +1,3 @@
-%%raw(`import './../node_modules/filepond/dist/filepond.min.css'`)
-
-%%raw(`import './../node_modules/filepond-polyfill/dist/filepond-polyfill.min.js'`)
-
 module File = {
   type t = {serverId: string}
 }
@@ -19,6 +15,7 @@ external make: (
   ~allowFileEncode: bool=?,
   ~maxFileSize: string=?,
   ~maxTotalFileSize: string=?,
+  ~labelIdle: string=?,
   ~server: string=?,
   ~allowMultiple: bool=?,
   ~maxFiles: int=?,

@@ -1,48 +1,47 @@
-%%raw(`import './MessageItem.css'`)
-
-open Utils
-
 open ConversationData
 
 @react.component
 let make = (~message: message) => {
-    <div
-      className={"MessageItem " ++
-      switch message.type_ {
-      | Incoming => "is_incoming"
-      | Outgoing => "is_reply"
-      }}>
-      <span>
-        {if message.type_ == Incoming {
-          textEl("Geschrieben am ")
-        } else {
-          <span> <i className="icon-reply" /> {textEl("Beantwortet am ")} </span>
-        }}
-        <IsoDate date={Js.Date.fromString(message.date)} />
-        {textEl(" um ")}
-        <IsoTime date={Js.Date.fromString(message.date)} />
-      </span>
-      <hr />
-      <p> {textEl(message.content)} </p>
-      {if Array.length(message.attachments) > 0 {
-        <div>
-          <b> {textEl(`Anhänge`)} </b>
-          <ul>
-            {message.attachments
-            |> Array.map((attachment: attachment) =>
-              <li key=attachment.url>
-                {if String.length(attachment.url) > 0 {
-                  <a href=attachment.url> {textEl("Anhang: " ++ attachment.filename)} </a>
-                } else {
-                  textEl("Anhang: " ++ attachment.filename)
-                }}
-              </li>
-            )
-            |> arrayEl}
-          </ul>
-        </div>
+  <div
+    className={"border-2 rounded bg-slate-50 px-4 py-4 " ++
+    switch message.type_ {
+    | Incoming => "lg:mr-20"
+    | Outgoing => "lg:ml-20"
+    }}>
+    <span>
+      {if message.type_ == Incoming {
+        "Geschrieben am "->React.string
       } else {
-        React.null
+        <span>
+          <i className="icon-reply text-[#236ea2] mr-1" />
+          {"Beantwortet am "->React.string}
+        </span>
       }}
-    </div>
+      <IsoDate date={Js.Date.fromString(message.date)} />
+      {" um "->React.string}
+      <IsoTime date={Js.Date.fromString(message.date)} />
+    </span>
+    <hr className="mb-2" />
+    <p className="whitespace-pre-line"> {message.content->React.string} </p>
+    {if Array.length(message.attachments) > 0 {
+      <div>
+        <strong> {"Anhänge"->React.string} </strong>
+        <ul>
+          {message.attachments
+          ->Array.map((attachment: attachment) =>
+            <li key=attachment.url>
+              {if String.length(attachment.url) > 0 {
+                <a href=attachment.url> {("Anhang: " ++ attachment.filename)->React.string} </a>
+              } else {
+                ("Anhang: " ++ attachment.filename)->React.string
+              }}
+            </li>
+          )
+          ->React.array}
+        </ul>
+      </div>
+    } else {
+      React.null
+    }}
+  </div>
 }

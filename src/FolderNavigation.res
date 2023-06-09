@@ -1,60 +1,87 @@
-%%raw(`import './FolderNavigation.css'`)
-
 open ConversationData
+
+type item = {
+  icon: string,
+  label: string,
+  folder: Folder.t,
+}
+
+let items = [
+  {label: "Neu & Unbearbeitet", icon: "icon-bolt", folder: Folder.New},
+  {label: "Unbeantwortet", icon: "icon-exclamation", folder: Folder.Unreplied},
+  {label: "Interessant", icon: "icon-thumbs-up-alt", folder: Folder.ByRating(Green)},
+  {label: "Vielleicht", icon: "icon-unchecked", folder: Folder.ByRating(Yellow)},
+  {label: "Uninteressant", icon: "icon-thumbs-down-alt", folder: Folder.ByRating(Red)},
+  {label: "Nicht bewertet", icon: "icon-question", folder: Folder.ByRating(Unrated)},
+  {label: "Zuvor beantwortet", icon: "icon-reply", folder: Folder.Replied},
+  {label: "Alle Nachrichten", icon: "icon-envelope-alt", folder: Folder.All},
+  {label: "Papierkorb", icon: "icon-trash", folder: Folder.Trash},
+]
+
+let filterByFolder = (conversations, folder) => {
+  switch folder {
+  | Folder.All => conversations->Js.Array2.filter(c => {
+    !c.is_in_trash
+  })
+  | New =>
+    conversations->Js.Array2.filter(c => {
+      (!c.is_in_trash && (c.rating == Unrated && (!c.is_replied_to && !c.is_ignored))) ||
+        (!c.is_in_trash && !c.is_read)
+    })
+  | ByRating(rating) =>
+    conversations->Js.Array2.filter(c => {
+      !c.is_in_trash && c.rating == rating
+    })
+  | Unreplied =>
+    conversations->Js.Array2.filter(c => {
+      !c.is_in_trash && (!c.is_replied_to && !c.is_ignored)
+    })
+  | Replied =>
+    conversations->Js.Array2.filter(c => {
+      !c.is_in_trash && c.has_been_replied_to
+    })
+  | Trash =>
+    conversations->Js.Array2.filter(c => {
+      c.is_in_trash
+    })
+  }
+}
 
 @react.component
 let make = (
-  ~active_folder: ConversationData.folder,
-  ~onClick: (ConversationData.folder, ReactEvent.Mouse.t) => unit,
-  ~counter: ConversationData.folder => array<ConversationData.conversation>,
+  ~activeFolder: Folder.t,
+  ~onFolderClick: Folder.t => unit,
+  ~conversations: array<ConversationData.conversation>,
+  ~showFoldersInMobile: bool,
+  ~closeFoldersInMobile: unit => unit,
+
 ) => {
-  <div className="FolderNavigation">
-    <FolderNavigationItem
-      folder=New icon="icon-bolt" label="Neu & Unbearbeitet" counter active_folder onClick
-    />
-    <FolderNavigationItem
-      folder=Unreplied icon="icon-exclamation" label="Unbeantwortet" counter active_folder onClick
-    />
-    <FolderNavigationItem
-      folder=ByRating(Some(Green))
-      icon="icon-thumbs-up-alt"
-      label="Favoriten"
-      counter
-      active_folder
-      onClick
-    />
-    <FolderNavigationItem
-      folder=ByRating(Some(Yellow))
-      icon="icon-unchecked"
-      label="Vielleicht"
-      counter
-      active_folder
-      onClick
-    />
-    <FolderNavigationItem
-      folder=ByRating(Some(Red))
-      icon="icon-thumbs-down-alt"
-      label="Uninteressant"
-      counter
-      active_folder
-      onClick
-    />
-    <FolderNavigationItem
-      folder=ByRating(None)
-      icon="icon-question"
-      label="Nicht bewertet"
-      counter
-      active_folder
-      onClick
-    />
-    <FolderNavigationItem
-      folder=Replied icon="icon-reply" label="Zuvor beantwortet" counter active_folder onClick
-    />
-    <FolderNavigationItem
-      folder=All icon="icon-envelope-alt" label="Alle Nachrichten" counter active_folder onClick
-    />
-    <FolderNavigationItem
-      folder=Trash icon="icon-trash" label="Papierkorb" counter active_folder onClick
-    />
+  <div className={`col-span-12 lg:col-span-2 print:hidden bg-gray-100 border ${showFoldersInMobile ? "" : "hidden lg:block"}`}>
+    {Belt.Array.map(items, ({label, icon, folder}) => {
+      let onClick = evt => {
+        ReactEvent.Mouse.preventDefault(evt)
+        onFolderClick(folder)
+        closeFoldersInMobile()
+      }
+
+      let filtered = filterByFolder(conversations, folder)
+
+      let unreadCount =
+        filtered
+        ->Js.Array2.filter(conv => {
+          !conv.is_read
+        })
+        ->Belt.Array.length
+
+      <FolderNavigationItem
+        key=label
+        isActive={activeFolder == folder}
+        unreadCount
+        count={Belt.Array.length(filtered)}
+        icon
+        label
+        onClick
+      />
+    })->React.array}
   </div>
 }

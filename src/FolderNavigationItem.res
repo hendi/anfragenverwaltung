@@ -1,29 +1,21 @@
-%%raw(`import './FolderNavigationItem.css'`)
-
-open Utils
-
-open ConversationData
-
 @react.component
 let make = (
-  ~active_folder: ConversationData.folder,
-  ~folder: ConversationData.folder,
+  ~isActive: bool=false,
   ~icon: string,
   ~label: string,
-  ~counter: ConversationData.folder => array<ConversationData.conversation>,
-  ~onClick: (ConversationData.folder, ReactEvent.Mouse.t) => unit,
+  ~count: int,
+  ~unreadCount: int,
+  ~onClick: ReactEvent.Mouse.t => unit,
 ) => {
-  let unread_counter = counter(folder)->Js.Array2.filter(c => c.is_read)->Belt.Array.length
-
-  let all_counter = counter(folder)->Js.Array2.length
-
-  <div
-    className={"FolderNavigationItem" ++
-    (" " ++
-    ((folder == active_folder ? "active" : "") ++ (" " ++ (unread_counter > 0 ? "unread" : ""))))}
-    onClick={onClick(folder)}>
-    <i className={"main-icon " ++ icon} />
-    {textEl(label)}
-    <span className="pull-right"> {` (${all_counter->Belt.Int.toString})`->React.string} </span>
-  </div>
+  <button
+    className={"flex items-center justify-between py-2 px-4 w-full " ++
+    ((isActive ? "bg-blue-100 text-blue-500" : "") ++
+    (" " ++ (unreadCount > 0 ? "unread" : "")))}
+    onClick>
+    <span className="flex gap-1">
+      <span className="inline-block w-4"> <i className={"main-icon " ++ icon} /> </span>
+      <span> {label->React.string} </span>
+    </span>
+    <span className="pl-1"> {` (${count->Belt.Int.toString})`->React.string} </span>
+  </button>
 }

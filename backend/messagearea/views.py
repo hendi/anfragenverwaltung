@@ -202,7 +202,6 @@ class ChangeConversation(CsrfExemptMixin, View, JSONResponseMixin):
             conversation.notes = data["notes"].strip()
             conversation.save(update_fields=["notes"])
 
-
         return self.render_json_response(conversation.to_json())
 
 

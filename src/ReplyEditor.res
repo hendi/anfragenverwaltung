@@ -1,80 +1,84 @@
-%%raw(`import './ReplyEditor.css'`)
-
-open Utils
-
 type state = {
-  message_text: string,
-  uploads_in_progress: int,
-  message_sent: bool,
+  messageText: string,
+  uploadsInProgress: int,
+  messageSent: bool,
 }
 
 type action =
   | MessageTextChanged(string)
-  | SendMessage
+  | SendReply
   | UploadStarted
   | UploadFinished
 
 @react.component
 let make = (
   ~conversation: ConversationData.conversation,
-  ~onReplySent: (ConversationData.conversation, string, array<string>) => unit,
+  ~onReplySend: (ConversationData.conversation, string, array<string>) => unit,
   ~onIgnoreConversation: ReactEvent.Mouse.t => unit,
 ) => {
   let initialState = {
-    message_text: "",
-    uploads_in_progress: 0,
-    message_sent: false,
+    messageText: "",
+    uploadsInProgress: 0,
+    messageSent: false,
   }
 
   let filepondRef = React.useRef(None)
 
-  let (state, send) = React.useReducer((state, action) => {
+  let (state, send) = ReactUpdate.useReducer((state, action) => {
     switch action {
-    | UploadStarted => {
-        ...state,
-        uploads_in_progress: state.uploads_in_progress + 1,
-      }
-    | UploadFinished => {
-        ...state,
-        uploads_in_progress: state.uploads_in_progress - 1,
-      }
-    | MessageTextChanged(text) => {
-        ...state,
-        message_text: text,
-      }
-    | SendMessage => {
-        let attachments = switch filepondRef.current {
-        | Some(filepond) => {
-            let files = filepond->Filepond.Instance.getFiles
-            files->Belt.Array.map(f => f.serverId)
+    | SendReply =>
+      ReactUpdate.UpdateWithSideEffects(
+        {...state, messageText: "", messageSent: true},
+        _self => {
+          let attachments = switch filepondRef.current {
+          | Some(filepond) => {
+              let files = filepond->Filepond.Instance.getFiles
+              files->Belt.Array.map(f => f.serverId)
+            }
+          | None => []
           }
-        | None => []
-        }
-
-        onReplySent(conversation, state.message_text, attachments)
-
-        {...state, message_text: "", message_sent: true}
-      }
+          onReplySend(conversation, state.messageText, attachments)
+          None
+        },
+      )
+    | UploadStarted =>
+      ReactUpdate.Update({
+        ...state,
+        uploadsInProgress: state.uploadsInProgress + 1,
+      })
+    | UploadFinished =>
+      ReactUpdate.Update({
+        ...state,
+        uploadsInProgress: state.uploadsInProgress - 1,
+      })
+    | MessageTextChanged(text) =>
+      ReactUpdate.Update({
+        ...state,
+        messageText: text,
+      })
     }
   }, initialState)
 
-  <div className="ReplyEditor">
-    <h2> {textEl("Antwort schreiben:")} </h2>
-    {if state.message_sent {
-      <div className="alert alert-success">
-        {textEl("Ihre Nachricht wurde erfolgreich verschickt.")}
+  <div className="space-y-4 lg:ml-20 print:hidden mb-4">
+    <h2 className="text-xl font-semibold text-blue-500"> {"Antwort schreiben:"->React.string} </h2>
+    {if state.messageSent {
+      <div className="bg-green-100 text-green-700 rounded p-2">
+        {"Ihre Nachricht wurde erfolgreich verschickt."->React.string}
       </div>
     } else {
       React.null
     }}
-    <div className={state.message_sent ? "hidden" : ""}>
+    <div className={state.messageSent ? "hidden" : ""}>
       <textarea
-        value=state.message_text
+        className="w-full rounded p-2 mb-2 border"
+        rows=4
+        value=state.messageText
         onChange={event => send(MessageTextChanged((event->ReactEvent.Form.target)["value"]))}
       />
       <Filepond
         ref={pond => filepondRef.current = Some(pond)}
         onprocessfilestart={_ => send(UploadStarted)}
+        labelIdle={`Sie können bis zu 3 Anhänge (jeweils max. 10MB) hochladen <span class="filepond--label-action"> [Dateien auswählen] </span>`}
         onprocessfile={e => {
           let wasSuccessfullyUploaded = %raw(`
            function (resp) {
@@ -109,19 +113,22 @@ let make = (
         maxTotalFileSize="10MB"
         server={ConversationData.apiBaseUrl ++ "/anfragen/upload_attachment"}
       />
-      <button
-        className="btn-send btn btn-primary pull-right"
-        disabled={String.length(state.message_text) == 0}
-        /* || state.uploads_in_progress != 0 */
-        onClick={_event => send(SendMessage)}>
-        {textEl("Antwort senden")}
-      </button>
-      <button
-        className="btn-ignore btn pull-right"
+      <div className="flex flex-row justify-end space-x-4">
+       <button
+        className="bg-slate-50 border border-slate-200 rounded p-2 disabled:text-gray-500 disabled:cursor-not-allowed"
         onClick=onIgnoreConversation
         disabled=conversation.is_ignored>
-        {textEl(`Keine Antwort nötig`)}
+        {"Keine Antwort nötig"->React.string}
       </button>
+      <button
+        className="bg-blue-500 text-white rounded p-2 hover:bg-blue-400 disabled:bg-slate-50 disabled:text-gray-500 disabled:border-slate-200 disabled:border disabled:cursor-not-allowed"
+        disabled={String.length(state.messageText) == 0}
+        onClick={_evt => {
+          send(SendReply)
+        }}>
+        {"Antwort senden"->React.string}
+      </button>
+      </div>
     </div>
   </div>
 }

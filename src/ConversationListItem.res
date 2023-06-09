@@ -1,101 +1,89 @@
-%%raw(`import './ConversationListItem.css'`)
-
 open Utils
-
 open ConversationData
 
 @react.component
 let make = (
-  ~onClick,
-  ~onRating,
-  ~onTrash,
-  ~onReadStatus,
-  ~onToggle,
+  ~onClick: option<ReactEvent.Mouse.t => unit>=?,
+  ~onRating: (ConversationData.conversation, ConversationData.rating, ReactEvent.Mouse.t) => unit,
+  ~onToggleSelect: conversation => unit,
   ~conversation: conversation,
-  ~selected,
-  ~active,
+  ~selected: bool,
+  ~active: bool,
 ) => {
-  let localOnClick = (e): (ReactEvent.Mouse.t => unit) => {
-    // don't reload messages if this conversation is currently selected
-    if !active {
-      onClick(e)
-    } else {
-      (_e => ())
+  let bgColor = if active {
+    "bg-blue-100"
+  } else {
+    switch conversation.rating {
+    | Green => "bg-green-100"
+    | Yellow => "bg-yellow-100"
+    | Red => "bg-red-100"
+    | Unrated => ""
     }
   }
 
-      <div
-        className={list{
-          "ConversationListItem",
-          switch conversation.rating {
-          | Some(Green) => "rating-green"
-          | Some(Yellow) => "rating-yellow"
-          | Some(Red) => "rating-red"
-          | _ => "rating-unrated"
-          },
-          selected ? "selected" : "",
-          active ? "active" : "",
-          conversation.is_in_trash ? "is_in_trash" : "",
-          !conversation.is_read ? "unread" : "",
-        } |> String.concat(" ")}>
-        <div>
-          <div>
-            <div className="pull-left">
-              <input
-                className="toggle"
-                type_="checkbox"
-                checked=selected
-                onChange={_ => onToggle(conversation)}
-              />
-              <span className="name pointer" onClick={localOnClick(conversation)}>
-                {textEl(conversation.name)}
-              </span>
-            </div>
-            <div className="pull-right">
-              <ConversationRater conversation onRating />
-              {if (
-                /* if (! conversation.is_read) {
-                      <i className="icon-asterisk" title="Ungelesen" />;
-                 } else */
-                conversation.is_replied_to
-              ) {
-                <i className="icon-reply" title="Beantwortet" />
-              } else {
-                React.null
-              }}
-              {if conversation.has_attachments {
-                <i className="icon-paperclip" title="Dateianhang vorhanden" />
-              } else {
-                React.null
-              }}
-              {if String.length(conversation.notes) > 0 {
-                <i className="icon-comment-alt" title="Notizen vorhanden" />
-              } else {
-                React.null
-              }}
-            </div>
-          </div>
-          <div className="clearfix" />
-          <div className="info">
-            <div className="date">
-              <IsoDate date={Js.Date.fromString(conversation.date_last_message)} />
-              <br />
-              {textEl("um ")}
-              <IsoTime date={Js.Date.fromString(conversation.date_last_message)} />
-            </div>
-          </div>
-          <div>
-            <div className="pointer" onClick={localOnClick(conversation)}>
-              {if conversation.latest_message.type_ == Outgoing {
-                <em>
-                  {textEl("Ihre Antwort: ")}
-                  {textEl(conversation.latest_message.content->max_length(20, 200))}
-                </em>
-              } else {
-                <span> {textEl(conversation.latest_message.content->max_length(20, 200))} </span>
-              }}
-            </div>
-          </div>
-        </div>
+  <div
+  ?onClick
+  className={[
+      "cursor-pointer p-2 border-b",
+      conversation.is_in_trash ? `text-gray-500 ${active ? "bg-blue-100" : "" }` : bgColor,
+      selected ? "border-l-4 border-l-blue-500" : "",
+      !conversation.is_read && !selected ? "border-l-4 border-l-orange-500" : "",
+    ]->Js.Array2.joinWith(" ")}
+    >
+    <div className="flex w-full justify-between">
+      <div className="flex flex-row gap-1 items-center">
+        <input
+          type_="checkbox"
+          checked=selected
+          onChange={_ => ()}
+          onClick={evt => {
+            ReactEvent.Mouse.stopPropagation(evt);
+            onToggleSelect(conversation)
+          }}
+        />
+        <span className="font-bold text-base">
+          {conversation.name->React.string}
+        </span>
       </div>
+      <div className="flex flex-row items-center gap-x-1">
+        {if (
+          conversation.is_replied_to
+        ) {
+          <i className="icon-reply text-[#236ea2] mr-1" title="Beantwortet" />
+        } else {
+          React.null
+        }}
+        {if conversation.has_attachments {
+          <i className="icon-paperclip mr-1" title="Dateianhang vorhanden" />
+        } else {
+          React.null
+        }}
+        {if String.length(conversation.notes) > 0 {
+          <i className="icon-comment-alt mb-1 mr-1" title="Notizen vorhanden" />
+        } else {
+          React.null
+        }}
+        <ConversationRater conversation onRating />
+      </div>
+    </div>
+    <div className="flex flex-row">
+      <div className="inline-block mt-1 text-xs">
+        <IsoDate date={Js.Date.fromString(conversation.date_last_message)} />
+        {" um "->React.string}
+        <IsoTime date={Js.Date.fromString(conversation.date_last_message)} />
+      </div>
+    </div>
+    <div>
+      <div>
+        {if conversation.latest_message.type_ == Outgoing {
+          <em>
+            {"Ihre Antwort: "->React.string}
+            {conversation.latest_message.content->maxLength(20, 200)->React.string}
+          </em>
+        } else {
+          <span> {conversation.latest_message.content->maxLength(20, 200)->React.string} </span>
+        }}
+      </div>
+    </div>
+  </div>
 }

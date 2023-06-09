@@ -1,24 +1,18 @@
-// This file was automatically converted to ReScript from 'ConversationReadStatus.re'
-// Check the output and make sure to delete the original file
-%%raw(`import './ConversationReadStatus.css'`)
-
-open Utils
-
 open ConversationData
 
 @react.component
-let make = (~conversation, ~onReadStatus) => {
-  <div className="ConversationReadStatus">
+let make = (~conversation, ~onReadStatus: (conversation, bool) => unit) => {
+  let onClick = evt => {
+    ReactEvent.Mouse.preventDefault(evt)
+    onReadStatus(conversation, !conversation.is_read)
+  }
+
+  <div className="flex flex-col lg:flex-row items-center justify-center bg-slate-50 py-2 lg:py-1 px-2 hover:bg-blue-100 border cursor-pointer w-full lg:w-auto" onClick >
     {if conversation.is_read && !conversation.is_in_trash {
-      <span
-        className="btn" onClick={onReadStatus(conversation, false)} title="Als ungelesen markieren">
-        <i className="icon-check" /> {textEl("Gelesen")}
-      </span>
+        <i className="icon-check mr-1" /> 
     } else {
-      <span
-        className="btn" onClick={onReadStatus(conversation, true)} title="Als gelesen markieren">
-        <i className="icon-check-empty" /> {textEl("Gelesen")}
-      </span>
+        <i className="icon-check-empty mr-1" />
     }}
+    {"Gelesen"->React.string}
   </div>
 }
