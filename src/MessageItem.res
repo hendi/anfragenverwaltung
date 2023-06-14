@@ -1,4 +1,5 @@
 open ConversationData
+open Utils
 
 @react.component
 let make = (~message: message) => {
@@ -17,9 +18,9 @@ let make = (~message: message) => {
           {"Beantwortet am "->React.string}
         </span>
       }}
-      <IsoDate date={Js.Date.fromString(message.date)} />
+      <IsoDate date={Js.Date.fromString(replaceSpaceWithT(message.date))} />
       {" um "->React.string}
-      <IsoTime date={Js.Date.fromString(message.date)} />
+      <IsoTime date={Js.Date.fromString(replaceSpaceWithT(message.date))} />
     </span>
     <hr className="mb-2" />
     <p className="whitespace-pre-line"> {message.content->React.string} </p>
