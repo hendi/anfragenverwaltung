@@ -4,7 +4,7 @@ open Utils
 @react.component
 let make = (~message: message) => {
   <div
-    className={"border-2 rounded bg-slate-50 px-4 py-4 " ++
+    className={"border-2 rounded bg-white px-4 py-4 " ++
     switch message.type_ {
     | Incoming => "lg:mr-20"
     | Outgoing => "lg:ml-20"
