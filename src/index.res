@@ -1,3 +1,10 @@
+%%raw(`import * as Sentry from '@sentry/react'`)
+%%raw(`
+  Sentry.init({
+    dsn: "https://4c6b36c096b34858a9cb70eb178fdc47@o4809.ingest.sentry.io/4505357460373504",
+  });
+`)
+
 %%raw(`import './index.css'`)
 %%raw(`import 'filepond/dist/filepond.min.css'`)
 %%raw(`import 'filepond-polyfill/dist/filepond-polyfill.min.js'`)
