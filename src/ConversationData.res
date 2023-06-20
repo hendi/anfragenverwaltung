@@ -35,6 +35,7 @@ type rec conversation = {
   zipcode: option<string>,
   city: option<string>,
   source: string,
+  priority: bool,
   date_last_message: string,
   count_messages: int,
   latest_message: message,
