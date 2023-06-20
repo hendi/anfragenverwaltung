@@ -49,7 +49,7 @@ class Conversation(models.Model):
         return self._latest
 
     @property
-    def priority(self):
+    def is_priority(self):
         # this is for testing the priority flag
         if self.sender_email == "someguy@mailinator.com":
             return True
@@ -71,7 +71,7 @@ class Conversation(models.Model):
             "has_attachments": False,
             "rating": self.rating,
 
-            "priority": self.priority,
+            "priority": self.is_priority,
 
             "notes": self.notes,
             "is_read": self.is_read or False,
