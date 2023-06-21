@@ -23,3 +23,7 @@ let getScrollTop: Dom.element => int = %raw(`
        return domNode.scrollTop;
      }
   `)
+
+let replaceSpaceWithT = (str: string): string => {
+  Js.String.replace(" ", "T", str)
+}

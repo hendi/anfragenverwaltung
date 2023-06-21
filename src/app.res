@@ -34,11 +34,19 @@ let filterConversations = (
       !c.is_in_trash || interactedWithConversations->List.has(c.id, (a, b) => a == b)
     )
   | New =>
-    conversations->Js.Array2.filter((c: conversation) =>
-      (!c.is_in_trash && (c.rating == Unrated && (!c.is_replied_to && !c.is_ignored))) ||
+    conversations
+      ->Js.Array2.filter((c: conversation) =>
+        (!c.is_in_trash && (c.rating == Unrated && (!c.is_replied_to && !c.is_ignored))) ||
         ((!c.is_in_trash && !c.is_read) ||
         interactedWithConversations->List.has(c.id, (a, b) => a == b))
-    )
+      )
+      ->Array.sort((a, b) =>
+        switch (a.priority, b.priority) {
+          | (true, false) => -1
+          | (false, true) => 1
+          | _ => 0
+        }
+      )
   | ByRating(rating) =>
     conversations->Js.Array2.filter(c =>
       (!c.is_in_trash && c.rating == rating) ||

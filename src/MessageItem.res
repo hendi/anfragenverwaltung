@@ -1,9 +1,10 @@
 open ConversationData
+open Utils
 
 @react.component
 let make = (~message: message) => {
   <div
-    className={"border-2 rounded bg-slate-50 px-4 py-4 " ++
+    className={"border-2 rounded bg-white px-4 py-4 " ++
     switch message.type_ {
     | Incoming => "lg:mr-20"
     | Outgoing => "lg:ml-20"
@@ -17,9 +18,9 @@ let make = (~message: message) => {
           {"Beantwortet am "->React.string}
         </span>
       }}
-      <IsoDate date={Js.Date.fromString(message.date)} />
+      <IsoDate date={Js.Date.fromString(replaceSpaceWithT(message.date))} />
       {" um "->React.string}
-      <IsoTime date={Js.Date.fromString(message.date)} />
+      <IsoTime date={Js.Date.fromString(replaceSpaceWithT(message.date))} />
     </span>
     <hr className="mb-2" />
     <p className="whitespace-pre-line"> {message.content->React.string} </p>

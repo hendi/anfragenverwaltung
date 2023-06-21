@@ -68,9 +68,9 @@ let make = (
     </div>
     <div className="flex flex-row">
       <div className="inline-block mt-1 text-xs">
-        <IsoDate date={Js.Date.fromString(conversation.date_last_message)} />
+        <IsoDate date={Js.Date.fromString(replaceSpaceWithT(conversation.date_last_message))} />
         {" um "->React.string}
-        <IsoTime date={Js.Date.fromString(conversation.date_last_message)} />
+        <IsoTime date={Js.Date.fromString(replaceSpaceWithT(conversation.date_last_message))} />
       </div>
     </div>
     <div>

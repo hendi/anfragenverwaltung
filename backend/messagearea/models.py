@@ -48,6 +48,13 @@ class Conversation(models.Model):
     def latest_message(self):
         return self._latest
 
+    @property
+    def is_priority(self):
+        # this is for testing the priority flag
+        if self.sender_email == "someguy@mailinator.com":
+            return True
+        return False
+
     def to_json(self, include_messages=False):
         data = {
             "id": self.id,
@@ -63,6 +70,8 @@ class Conversation(models.Model):
 
             "has_attachments": False,
             "rating": self.rating,
+
+            "priority": self.is_priority,
 
             "notes": self.notes,
             "is_read": self.is_read or False,
