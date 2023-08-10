@@ -67,9 +67,9 @@ let make = (
     "bg-gradient-to-b from-gray-300 to-slate-50"
   } else {
     switch conversation.rating {
-    | Green => "bg-gradient-to-b from-green-100 to-slate-50"
-    | Yellow => "bg-gradient-to-b from-yellow-100 to-slate-50"
-    | Red => "bg-gradient-to-b from-red-100 to-slate-50"
+    | Green => "bg-gradient-to-b from-green-300 to-slate-50"
+    | Yellow => "bg-gradient-to-b from-yellow-300 to-slate-50"
+    | Red => "bg-gradient-to-b from-red-300 to-slate-50"
     | Unrated => ""
     }
   }
