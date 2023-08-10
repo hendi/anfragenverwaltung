@@ -9,8 +9,8 @@ module RateButton = {
     <button
       onClick
       title
-      className={`w-6 h-6 inline-flex justify-center items-center`}>
-      <i className={`${fontWeight} hover:font-bold ${(icon :> string)}`} />
+      className={`w-7 h-7 inline-flex justify-center items-center object-fit`}>
+      <i className={`${fontWeight} text-lg hover:font-bold ${(icon :> string)}`} />
     </button>
   }
 }
