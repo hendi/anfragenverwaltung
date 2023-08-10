@@ -14,7 +14,7 @@ let make = (
     "bg-blue-100"
   } else {
     switch conversation.rating {
-    | Green => "bg-green-100"
+    | Green => "bg-emerald-100"
     | Yellow => "bg-yellow-100"
     | Red => "bg-red-100"
     | Unrated => ""
