@@ -155,7 +155,6 @@ let make = (
         </span>
         <span>
           {
-            Js.log(conversation.shared_profile_link)
             switch (conversation.shared_profile_link) {
             | Some("") => React.null
             | Some(link) => 
