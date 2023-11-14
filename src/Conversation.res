@@ -163,6 +163,7 @@ let make = (
                 <strong> {"Profil des Interessenten: "->React.string} </strong>
                 <a className="text-blue-500 mb-2" target="_blank" href={link}> <i className="icon-user mr-1" />{"Profil anschauen"->React.string} </a>
               </span>
+            | _ => React.null
             }
           }
         </span>
