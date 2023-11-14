@@ -153,6 +153,19 @@ let make = (
           <strong> {"Via: "->React.string} </strong>
           {conversation.source->React.string}
         </span>
+        <span>
+          {
+            Js.log(conversation.shared_profile_link)
+            switch (conversation.shared_profile_link) {
+            | Some("") => React.null
+            | Some(link) => 
+               <span>
+                <strong> {"Profil des Interessenten: "->React.string} </strong>
+                <a className="text-blue-500 mb-2" target="_blank" href={link}> <i className="icon-user mr-1" />{"Profil anschauen"->React.string} </a>
+              </span>
+            }
+          }
+        </span>
       </div>
       {if String.length(state.notes) > 0 {
           <div className="hidden px-2 mb-4 print:block">

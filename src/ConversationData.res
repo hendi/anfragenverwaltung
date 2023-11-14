@@ -36,6 +36,7 @@ type rec conversation = {
   city: option<string>,
   source: string,
   priority: bool,
+  shared_profile_link: option<string>,
   date_last_message: string,
   count_messages: int,
   latest_message: message,
