@@ -174,7 +174,7 @@ let make = (
           React.null
       }}
       <div className="mb-2 px-2 print:hidden">
-        <a className="text-blue-500 cursor-pointer" onClick={_event => send(ToggleNotes)}>
+        <a className={`text-blue-500 cursor-pointer ${String.length(conversation.notes) > 0 ? "font-bold" : ""}`} onClick={_event => send(ToggleNotes)}>
           <i className={state.show_notes ? "icon-caret-down mr-1" : "icon-caret-right mr-1"} />
           {"Private Notizen"->React.string}
         </a>
