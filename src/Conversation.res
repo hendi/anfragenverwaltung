@@ -144,7 +144,7 @@ let make = (
         | (Some(street), Some(zipcode), Some(city)) =>
           <span>
             <strong> {"Adresse: "->React.string} </strong>
-            {`${street}, ${zipcode} ${city})`->React.string}
+            {`${street}, ${zipcode} ${city}`->React.string}
           </span>
         | _ => React.null
         }}
