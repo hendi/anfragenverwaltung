@@ -115,7 +115,7 @@ let make = (
       />
       <div className="flex flex-row justify-end space-x-4">
        <button
-        className="bg-slate-50 border border-slate-200 rounded p-2 disabled:text-gray-500 disabled:cursor-not-allowed"
+        className="bg-slate-50 hover:bg-blue-100 border border-slate-200 rounded p-2 disabled:text-gray-500 disabled:cursor-not-allowed"
         onClick=onIgnoreConversation
         disabled=conversation.is_ignored>
         {"Keine Antwort nötig"->React.string}
