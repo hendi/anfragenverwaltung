@@ -123,13 +123,13 @@ let make = (
       
       <div className="flex flex-col lg:block lg:space-x-2 px-2">
         <span>
-          <strong> {"E-Mail: "->React.string} </strong>
+          <strong> {"E-Mail:\u00A0"->React.string} </strong>
           {conversation.email->React.string}
         </span>
         {switch Js.Nullable.toOption(conversation.phone) {
         | Some(phone) =>
           <span>
-            <strong> {"Telefon: "->React.string} </strong>
+            <strong> {"Telefon:\u00A0"->React.string} </strong>
             {phone->React.string}
           </span>
         | None => React.null
@@ -138,18 +138,18 @@ let make = (
         | (None, None, _) => React.null
         | (None, Some(zipcode), Some(city)) =>
           <span>
-            <strong> {"Adresse: "->React.string} </strong>
-            {`${zipcode} ${city}`->React.string}
+            <strong> {"Adresse:\u00A0"->React.string} </strong>
+            {`${zipcode}\u00A0${city}`->React.string}
           </span>
         | (Some(street), Some(zipcode), Some(city)) =>
           <span>
-            <strong> {"Adresse: "->React.string} </strong>
-            {`${street}, ${zipcode} ${city}`->React.string}
+            <strong> {"Adresse:\u00A0"->React.string} </strong>
+            {`${street}, ${zipcode}\u00A0${city}`->React.string}
           </span>
         | _ => React.null
         }}
         <span>
-          <strong> {"Via: "->React.string} </strong>
+          <strong> {"Via:\u00A0"->React.string} </strong>
           {conversation.source->React.string}
         </span>
         <span>
@@ -157,7 +157,7 @@ let make = (
             switch Js.Nullable.toOption(conversation.shared_profile_link) {
             | Some(link) => 
                <span>
-                <strong> {"Profil des Interessenten: "->React.string} </strong>
+                <strong> {"Profil des Interessenten:\u00A0"->React.string} </strong>
                 <a className="text-blue-500 mb-2" target="_blank" href={link}> <i className="icon-user mr-1" />{"Profil anschauen"->React.string} </a>
               </span>
             | _ => React.null
