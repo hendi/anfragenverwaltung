@@ -5095,10 +5095,10 @@ requires-port@^1.0.0:
   resolved "https://registry.yarnpkg.com/requires-port/-/requires-port-1.0.0.tgz#925d2601d39ac485e091cf0da5c6e694dc3dcaff"
   integrity sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==
 
-rescript@^11.0.0-beta.1:
-  version "11.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/rescript/-/rescript-11.0.0-beta.2.tgz#f8be07efcd4aa0f0ab2487e9bec12c0590985b65"
-  integrity sha512-Tcf72sR4EQ+eVMAwMWDSW5VPfg8YOS6bRJQ1Sf4u6jMy7Ui18mZyy0rusQmeq8vf2spgNulMcOw+HzQ9bEiz7g==
+rescript@^11.0.0-rc.5:
+  version "11.0.0-rc.5"
+  resolved "https://registry.yarnpkg.com/rescript/-/rescript-11.0.0-rc.5.tgz#7432ad57f6baa2d6edaaeb9c795e4c9ad85498dd"
+  integrity sha512-7tiOmhOJ0myaIM9/AEYxiKXha2mn+9AGdkiy5PNOaBjuGxF2Le7qnr/cyOiTTpPq4fYXxZhwpaBF1AKNl5LUPg==
 
 resolve-cwd@^2.0.0:
   version "2.0.0"
