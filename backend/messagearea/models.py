@@ -62,10 +62,10 @@ class Conversation(models.Model):
 
             "name": self.name,
             "email": self.sender_email,
-            "phone": self.phone,
-            "street": self.street,
-            "zipcode": self.zipcode,
-            "city": self.city,
+            "phone": self.phone or None,
+            "street": self.street or None,
+            "zipcode": self.zipcode or None,
+            "city": self.city or None,
             "source": self.source or "",
 
             "has_attachments": False,
@@ -80,10 +80,9 @@ class Conversation(models.Model):
             "is_in_trash": self.is_in_trash or False,
             "is_ignored": self.is_ignored or False,
             "is_junk": self.is_junk or False,
-
             "date_last_message": str(self.date_last_message),
             "count_messages": self.count_messages or 0,
-
+            "shared_profile_link": None,
             "latest_message": {
                 "id": self._latest.id,
                 "conversation_id": self.id,
