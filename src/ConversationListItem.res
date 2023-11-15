@@ -42,6 +42,10 @@ let make = (
           }}
         />
         <span className="font-bold text-base">
+          {switch Js.Nullable.toOption(conversation.shared_profile_link) {
+            | Some(_) => <i className="text-blue-500 icon-user mr-1" title="Profil vorhanden" />
+            | _ => React.null
+          }}
           {conversation.name->React.string}
         </span>
       </div>
