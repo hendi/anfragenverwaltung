@@ -126,8 +126,7 @@ let make = (
           <strong> {"E-Mail: "->React.string} </strong>
           {conversation.email->React.string}
         </span>
-        {switch conversation.phone {
-        | Some("") => React.null
+        {switch Js.Nullable.toOption(conversation.phone) {
         | Some(phone) =>
           <span>
             <strong> {"Telefon: "->React.string} </strong>
@@ -135,9 +134,9 @@ let make = (
           </span>
         | None => React.null
         }}
-        {switch (conversation.street, conversation.zipcode, conversation.city) {
-        | (Some(""), Some(""), _) => React.null
-        | (Some(""), Some(zipcode), Some(city)) =>
+        {switch (Js.Nullable.toOption(conversation.street), Js.Nullable.toOption(conversation.zipcode), Js.Nullable.toOption(conversation.city)) {
+        | (None, None, _) => React.null
+        | (None, Some(zipcode), Some(city)) =>
           <span>
             <strong> {"Adresse: "->React.string} </strong>
             {`${zipcode} ${city}`->React.string}
@@ -155,8 +154,7 @@ let make = (
         </span>
         <span>
           {
-            switch (conversation.shared_profile_link) {
-            | Some("") => React.null
+            switch Js.Nullable.toOption(conversation.shared_profile_link) {
             | Some(link) => 
                <span>
                 <strong> {"Profil des Interessenten: "->React.string} </strong>

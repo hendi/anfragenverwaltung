@@ -19,10 +19,10 @@ let filterConversations = (
             open Utils
             stringContains(String.toLowerCase(c.name), filterText) ||
             (stringContains(String.toLowerCase(c.email), filterText) ||
-            (stringContains(String.toLowerCase(c.phone->getWithDefault("")), filterText) ||
-            (stringContains(String.toLowerCase(c.city->getWithDefault("")), filterText) ||
-            (stringContains(String.toLowerCase(c.zipcode->getWithDefault("")), filterText) ||
-            (stringContains(String.toLowerCase(c.street->getWithDefault("")), filterText) ||
+            (stringContains(String.toLowerCase(c.phone->Js.Nullable.toOption->getWithDefault("")), filterText) ||
+            (stringContains(String.toLowerCase(c.city->Js.Nullable.toOption->getWithDefault("")), filterText) ||
+            (stringContains(String.toLowerCase(c.zipcode->Js.Nullable.toOption->getWithDefault("")), filterText) ||
+            (stringContains(String.toLowerCase(c.street->Js.Nullable.toOption->getWithDefault("")), filterText) ||
             (stringContains(String.toLowerCase(c.latest_message.content), filterText) ||
             stringContains(c.notes, filterText)))))))
           }
